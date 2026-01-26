@@ -1,0 +1,104 @@
+/* Scanner Specific Styles */
+#reader {
+    border: none !important;
+    min-height: 400px;
+}
+
+#reader video {
+    border-radius: 1rem;
+}
+
+#reader__scan_region {
+    border-radius: 1rem !important;
+}
+
+#reader__dashboard_section {
+    display: none !important;
+}
+
+#reader__header_message {
+    display: none !important;
+}
+
+/* File Upload Area */
+.file-upload-area {
+    border: 2px dashed rgba(99, 102, 241, 0.5);
+    transition: all 0.3s ease;
+}
+
+.file-upload-area:hover {
+    border-color: rgba(99, 102, 241, 0.8);
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.file-upload-area.dragover {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+    transform: scale(1.02);
+}
+
+#fileInput {
+    display: none;
+}
+
+/* Tab Buttons */
+.tab-button {
+    transition: all 0.3s ease;
+}
+
+.tab-button.active {
+    background: linear-gradient(to right, #4f46e5, #7c3aed);
+    color: white;
+}
+
+.tab-button:not(.active):hover {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+/* Status Indicators */
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.status-dot.active {
+    background: #10b981;
+    box-shadow: 0 0 10px #10b981;
+}
+
+.status-dot.error {
+    background: #ef4444;
+    box-shadow: 0 0 10px #ef4444;
+}
+
+.status-dot.waiting {
+    background: #f59e0b;
+    box-shadow: 0 0 10px #f59e0b;
+}
+
+/* Scanner Controls */
+.scanner-control {
+    transition: all 0.3s ease;
+}
+
+.scanner-control:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+/* Preview Image */
+#filePreview img {
+    max-height: 400px;
+    object-fit: contain;
+}
+
+/* Stats Cards */
+.stat-card {
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: scale(1.05);
+}

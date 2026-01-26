@@ -9,64 +9,63 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
-    <link rel="stylesheet" href="style.css">
+    <!-- Web3 Library -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    
+    <!-- QR Code Library - PENTING! -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <link rel="stylesheet" href="css/main.css" />
   </head>
 
   <body class="text-gray-100 min-h-screen grid-bg">
     <!-- Decorative Elements -->
-    <div
-      class="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden"
-    >
-      <div
-        class="absolute top-20 left-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"
-      ></div>
-      <div
-        class="absolute top-40 right-20 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl"
-      ></div>
-      <div
-        class="absolute bottom-20 right-10 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl"
-      ></div>
-      <div
-        class="absolute bottom-40 left-20 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl"
-      ></div>
+    <div class="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+      <div class="absolute top-20 left-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
+      <div class="absolute top-40 right-20 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-20 right-10 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-40 left-20 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl"></div>
     </div>
 
     <!-- Navbar -->
     <nav class="relative z-10 border-b border-indigo-500/20 glass-card">
-      <div
-        class="max-w-6xl mx-auto px-6 py-5 flex justify-between items-center"
-      >
+      <div class="max-w-6xl mx-auto px-6 py-5 flex justify-between items-center">
         <div class="flex items-center gap-3">
-          <div
-            class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center neon-border"
-          >
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center neon-border">
             <i class="fas fa-ticket text-2xl text-white"></i>
           </div>
-          <span class="font-bold text-2xl tracking-tight text-white glow-text"
-            >NFT TICKET</span
-          >
+          <span class="font-bold text-2xl tracking-tight text-white glow-text">NFT TICKET</span>
         </div>
-        <button
-          id="connectBtn"
-          class="px-6 py-3 rounded-lg glass-card hover:neon-border transition-all duration-300 font-semibold border border-indigo-500/50 text-gray-200 hover:text-white"
-        >
-          <span class="flex items-center gap-2">
-            <span
-              class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-400/50"
-            ></span>
-            Connect Wallet
-          </span>
-        </button>
+
+        <!-- Wallet Connection Button -->
+        <div id="walletSection">
+          <button id="connectBtn" class="px-6 py-3 rounded-lg glass-card hover:neon-border transition-all duration-300 font-semibold border border-indigo-500/50 text-gray-200 hover:text-white">
+            <span class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-red-400 animate-pulse shadow-lg shadow-red-400/50"></span>
+              Connect Wallet
+            </span>
+          </button>
+
+          <div id="walletInfo" class="hidden flex items-center gap-3">
+            <div class="glass-card px-4 py-2 rounded-lg border border-emerald-500/50">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-400/50"></span>
+                <span id="walletAddress" class="font-mono text-sm text-gray-200">0x0000...0000</span>
+              </div>
+            </div>
+            <button id="disconnectBtn" class="px-4 py-2 rounded-lg glass-card hover:neon-border transition-all duration-300 border border-red-500/50 text-gray-400 hover:text-red-400">
+              <i class="fas fa-power-off"></i>
+            </button>
+          </div>
+        </div>
       </div>
     </nav>
 
-    <!-- Main -->
+    <!-- Main Content -->
     <main class="relative z-10 max-w-6xl mx-auto px-6 py-20">
       <!-- Hero Section -->
       <div class="text-center mb-20">
-        <div
-          class="inline-block mb-6 px-5 py-2.5 rounded-full glass-card border border-indigo-500/50 text-sm neon-border"
-        >
+        <div class="inline-block mb-6 px-5 py-2.5 rounded-full glass-card border border-indigo-500/50 text-sm neon-border">
           <span class="text-indigo-300 font-semibold flex items-center gap-2">
             <i class="fas fa-sparkles"></i>
             Web3 Powered Ticketing
@@ -75,57 +74,46 @@
         <h1 class="text-7xl font-bold mb-6 leading-tight">
           <span class="text-white glow-text">Mint Your</span>
           <br />
-          <span
-            class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
-          >
+          <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
             Event Ticket NFT
           </span>
         </h1>
         <p class="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-          Secure your spot on the blockchain. Each ticket is a unique NFT stored
-          permanently in your wallet with verifiable ownership.
+          Secure your spot on the blockchain. Each ticket is a unique NFT stored permanently in your wallet with verifiable ownership.
         </p>
       </div>
 
       <!-- Ticket Preview Card -->
       <div class="max-w-lg mx-auto mb-16 animate-float">
         <div class="glass-card rounded-3xl p-8 pulse-border">
-          <div
-            class="relative aspect-[4/3] rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 mb-6 flex items-center justify-center overflow-hidden ticket-glow"
-          >
+          <div class="relative aspect-[4/3] rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 mb-6 flex items-center justify-center overflow-hidden ticket-glow">
             <div class="absolute inset-0 bg-black/20"></div>
             <i class="fas fa-ticket relative text-9xl text-white/90"></i>
-            <div
-              class="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-black/30 backdrop-blur-sm border border-white/20"
-            >
+            <div class="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-black/30 backdrop-blur-sm border border-white/20">
               <span class="text-xs font-bold text-white">ERC-721</span>
             </div>
           </div>
           <div class="space-y-4">
-            <div
-              class="flex justify-between items-center text-sm border-b border-indigo-500/20 pb-3"
-            >
+            <div class="flex justify-between items-center text-sm border-b border-indigo-500/20 pb-3">
               <span class="text-gray-500 flex items-center gap-2">
                 <i class="fas fa-calendar-alt text-indigo-400"></i>
                 Event
               </span>
               <span class="font-semibold text-white">Web3 Summit 2026</span>
             </div>
-            <div
-              class="flex justify-between items-center text-sm border-b border-indigo-500/20 pb-3"
-            >
+            <div class="flex justify-between items-center text-sm border-b border-indigo-500/20 pb-3">
               <span class="text-gray-500 flex items-center gap-2">
                 <i class="fas fa-hashtag text-purple-400"></i>
                 Token ID
               </span>
-              <span class="font-mono text-indigo-300 font-semibold">#????</span>
+              <span id="tokenIdDisplay" class="font-mono text-indigo-300 font-semibold">#????</span>
             </div>
             <div class="flex justify-between items-center text-sm">
               <span class="text-gray-500 flex items-center gap-2">
                 <i class="fab fa-ethereum text-pink-400"></i>
                 Network
               </span>
-              <span class="font-semibold text-white">Ethereum Mainnet</span>
+              <span id="networkName" class="font-semibold text-white">Not Connected</span>
             </div>
           </div>
         </div>
@@ -133,33 +121,70 @@
 
       <!-- Mint Button -->
       <div class="text-center mb-20">
-        <button
-          id="mintBtn"
-          class="group relative px-16 py-6 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 font-bold text-xl hover:scale-105 transition-all duration-300 neon-border text-white"
-        >
+        <button id="mintBtn" class="group relative px-16 py-6 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 font-bold text-xl hover:scale-105 transition-all duration-300 neon-border text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
           <span class="flex items-center justify-center gap-3">
-            <i
-              class="fas fa-wand-magic-sparkles text-2xl group-hover:rotate-12 transition-transform"
-            ></i>
+            <i class="fas fa-wand-magic-sparkles text-2xl group-hover:rotate-12 transition-transform"></i>
             <span>Mint Ticket NFT</span>
           </span>
         </button>
 
         <!-- Status -->
-        <div
-          id="statusBox"
-          class="mt-8 text-sm text-gray-400 min-h-[24px]"
-        ></div>
+        <div id="statusBox" class="mt-8 text-sm text-gray-400 min-h-[24px]"></div>
+      </div>
+
+      <!-- ✅ QR CODE SECTION - IMPROVED -->
+      <div id="qrSection" class="hidden max-w-2xl mx-auto mb-20">
+        <div class="glass-card rounded-3xl p-10 border-2 border-emerald-500/50 neon-border">
+          
+          <!-- Header -->
+          <div class="text-center mb-8">
+            <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center animate-pulse">
+              <i class="fas fa-check-circle text-4xl text-white"></i>
+            </div>
+            <h3 class="text-3xl font-bold text-white mb-2">🎉 Minting Successful!</h3>
+            <p class="text-gray-400">Your ticket has been minted. Save the QR code below for event entry.</p>
+          </div>
+
+          <!-- QR Code Display -->
+          <div class="bg-white p-8 rounded-2xl mb-8 flex justify-center">
+            <div id="qrCodeContainer"></div>
+          </div>
+
+          <!-- Ticket Details -->
+          <div class="grid md:grid-cols-2 gap-4 mb-8">
+            <div class="glass-card rounded-xl p-4 border border-indigo-500/30">
+              <div class="text-gray-400 text-xs mb-1">Token ID</div>
+              <div id="qrTokenId" class="font-mono text-2xl font-bold text-emerald-400">#0</div>
+            </div>
+            <div class="glass-card rounded-xl p-4 border border-indigo-500/30">
+              <div class="text-gray-400 text-xs mb-1">Event</div>
+              <div class="font-semibold text-white">Web3 Summit 2026</div>
+            </div>
+            <div class="glass-card rounded-xl p-4 border border-indigo-500/30 md:col-span-2">
+              <div class="text-gray-400 text-xs mb-1">Wallet Address</div>
+              <div id="qrWallet" class="font-mono text-sm text-gray-300 break-all">0x0000...0000</div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4">
+            <button id="downloadQrBtn" class="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 font-bold text-white hover:scale-105 transition-all neon-border">
+              <i class="fas fa-download mr-2"></i>
+              Download QR Code
+            </button>
+            <a href="scanner.html" class="flex-1 px-6 py-4 rounded-xl glass-card border border-indigo-500/50 font-bold text-center text-white hover:neon-border transition-all">
+              <i class="fas fa-qrcode mr-2"></i>
+              Test Scanner
+            </a>
+          </div>
+
+        </div>
       </div>
 
       <!-- Features Grid -->
       <div class="grid md:grid-cols-3 gap-8 mt-24">
-        <div
-          class="glass-card rounded-2xl p-8 text-center hover:neon-border transition-all duration-300 group"
-        >
-          <div
-            class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform"
-          >
+        <div class="glass-card rounded-2xl p-8 text-center hover:neon-border transition-all duration-300 group">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
             <i class="fas fa-shield-halved text-3xl text-white"></i>
           </div>
           <h3 class="font-bold text-lg mb-3 text-white">Blockchain Secured</h3>
@@ -167,12 +192,8 @@
             Immutable ownership verification on Ethereum blockchain
           </p>
         </div>
-        <div
-          class="glass-card rounded-2xl p-8 text-center hover:neon-border transition-all duration-300 group"
-        >
-          <div
-            class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform"
-          >
+        <div class="glass-card rounded-2xl p-8 text-center hover:neon-border transition-all duration-300 group">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
             <i class="fas fa-gem text-3xl text-white"></i>
           </div>
           <h3 class="font-bold text-lg mb-3 text-white">Unique NFT</h3>
@@ -180,12 +201,8 @@
             One-of-a-kind digital ticket with metadata
           </p>
         </div>
-        <div
-          class="glass-card rounded-2xl p-8 text-center hover:neon-border transition-all duration-300 group"
-        >
-          <div
-            class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center group-hover:scale-110 transition-transform"
-          >
+        <div class="glass-card rounded-2xl p-8 text-center hover:neon-border transition-all duration-300 group">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center group-hover:scale-110 transition-transform">
             <i class="fas fa-exchange-alt text-3xl text-white"></i>
           </div>
           <h3 class="font-bold text-lg mb-3 text-white">Fully Tradeable</h3>
@@ -196,91 +213,58 @@
       </div>
 
       <!-- Stats Section -->
-      <div
-        class="grid md:grid-cols-4 gap-6 mt-20 glass-card rounded-2xl p-8 border border-indigo-500/30"
-      >
+      <div class="grid md:grid-cols-4 gap-6 mt-20 glass-card rounded-2xl p-8 border border-indigo-500/30">
         <div class="text-center">
-          <div
-            class="text-3xl font-bold text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text mb-2"
-          >
+          <div class="text-3xl font-bold text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text mb-2">
             1,234
           </div>
           <div class="text-sm text-gray-500">Total Minted</div>
         </div>
         <div class="text-center">
-          <div
-            class="text-3xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text mb-2"
-          >
+          <div class="text-3xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text mb-2">
             892
           </div>
           <div class="text-sm text-gray-500">Unique Holders</div>
         </div>
         <div class="text-center">
-          <div
-            class="text-3xl font-bold text-transparent bg-gradient-to-r from-pink-400 to-indigo-400 bg-clip-text mb-2"
-          >
+          <div class="text-3xl font-bold text-transparent bg-gradient-to-r from-pink-400 to-indigo-400 bg-clip-text mb-2">
             0.08Ξ
           </div>
           <div class="text-sm text-gray-500">Floor Price</div>
         </div>
         <div class="text-center">
-          <div
-            class="text-3xl font-bold text-transparent bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text mb-2"
-          >
+          <div class="text-3xl font-bold text-transparent bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text mb-2">
             5.2Ξ
           </div>
           <div class="text-sm text-gray-500">Total Volume</div>
         </div>
       </div>
-
-      <!-- View Ticket Link -->
-      <a href="ticket.html" class="block mt-20 text-center group">
-        <span
-          class="inline-flex items-center gap-3 text-gray-400 hover:text-indigo-400 transition-colors text-lg"
-        >
-          <i class="fas fa-layer-group"></i>
-          <span>View My Ticket Collection</span>
-          <i
-            class="fas fa-arrow-right group-hover:translate-x-2 transition-transform"
-          ></i>
-        </span>
-      </a>
     </main>
 
     <!-- Footer -->
-    <footer
-      class="relative z-10 border-t border-indigo-500/20 glass-card mt-20"
-    >
+    <footer class="relative z-10 border-t border-indigo-500/20 glass-card mt-20">
       <div class="max-w-6xl mx-auto px-6 py-8">
-        <div
-          class="flex flex-col md:flex-row justify-between items-center gap-4"
-        >
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
           <div class="flex items-center gap-2 text-gray-400 text-sm">
             <i class="fas fa-copyright"></i>
-            <span>2026 NFT Ticket. Built on Ethereum.</span>
+            <span>2026 NFT Ticket. Built on Polygon Amoy.</span>
           </div>
           <div class="flex items-center gap-6">
-            <a
-              href="#"
-              class="text-gray-400 hover:text-indigo-400 transition-colors"
-            >
+            <a href="#" class="text-gray-400 hover:text-indigo-400 transition-colors">
               <i class="fab fa-twitter text-xl"></i>
             </a>
-            <a
-              href="#"
-              class="text-gray-400 hover:text-indigo-400 transition-colors"
-            >
+            <a href="#" class="text-gray-400 hover:text-indigo-400 transition-colors">
               <i class="fab fa-discord text-xl"></i>
             </a>
-            <a
-              href="#"
-              class="text-gray-400 hover:text-indigo-400 transition-colors"
-            >
+            <a href="#" class="text-gray-400 hover:text-indigo-400 transition-colors">
               <i class="fab fa-github text-xl"></i>
             </a>
           </div>
         </div>
       </div>
     </footer>
+
+    <!-- ✅ ONLY ONE SCRIPT - wallet.js (includes minting + QR) -->
+    <script src="js/wallet.js"></script>
   </body>
 </html>

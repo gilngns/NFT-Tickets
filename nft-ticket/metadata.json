@@ -1,0 +1,12 @@
+{
+  "name": "Dev Meetup Bandung 2026 - NFT Ticket",
+  "description": "Official NFT Ticket for Dev Meetup Bandung 2026. Valid for 1 entry.",
+  "image": "ipfs://bafybeifarkiy6ygrlqq26leu4mqgxoid6qjwm6ic46l52jgzyiekaqapkq",
+  "attributes": [
+    { "trait_type": "Event", "value": "Dev Meetup Bandung 2026" },
+    { "trait_type": "City", "value": "Bandung" },
+    { "trait_type": "Date", "value": "2026-02-15" },
+    { "trait_type": "Seat", "value": "A-15" },
+    { "trait_type": "Status", "value": "Unused" }
+  ]
+}

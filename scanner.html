@@ -1,891 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Ticket Scanner — NFT Ticket</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-      @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap");
+<head>
+  <meta charset="UTF-8" />
+  <title>Ticket Scanner — NFT Ticket</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <!-- External Libraries -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/scanner.css" />
+</head>
 
-      body {
-        font-family: "Space Grotesk", sans-serif;
-        background: #000000;
-        position: relative;
-        overflow-x: hidden;
-      }
+<body class="text-gray-100 min-h-screen grid-bg">
 
-      .glow-text {
-        text-shadow: 0 0 20px rgba(99, 102, 241, 0.8),
-          0 0 40px rgba(139, 92, 246, 0.5);
-      }
+  <!-- Decorative Elements -->
+  <div class="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+    <div class="absolute top-20 left-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute top-40 right-20 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-20 right-10 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-40 left-20 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl"></div>
+  </div>
 
-      .glass-card {
-        background: rgba(15, 15, 25, 0.8);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(99, 102, 241, 0.3);
-      }
+  <!-- Navbar -->
+  <nav class="relative z-10 border-b border-indigo-500/20 glass-card">
+    <div class="max-w-6xl mx-auto px-6 py-5 flex justify-between items-center">
+      <a href="index.html" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group">
+        <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+        <span>Back to Home</span>
+      </a>
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center neon-border">
+          <i class="fas fa-qrcode text-2xl text-white"></i>
+        </div>
+        <span class="font-bold text-2xl tracking-tight text-white glow-text">TICKET SCANNER</span>
+      </div>
+    </div>
+  </nav>
 
-      .neon-border {
-        box-shadow: 0 0 20px rgba(99, 102, 241, 0.6),
-          0 0 40px rgba(139, 92, 246, 0.4),
-          inset 0 0 20px rgba(99, 102, 241, 0.1);
-      }
-
-      .grid-bg {
-        background-image: radial-gradient(
-            circle at 20% 50%,
-            rgba(99, 102, 241, 0.15) 0%,
-            transparent 50%
-          ),
-          radial-gradient(
-            circle at 80% 80%,
-            rgba(139, 92, 246, 0.15) 0%,
-            transparent 50%
-          ),
-          linear-gradient(rgba(99, 102, 241, 0.05) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
-        background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
-      }
-
-      @keyframes pulse-ring {
-        0% {
-          transform: scale(0.95);
-          box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
-        }
-
-        70% {
-          transform: scale(1);
-          box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
-        }
-
-        100% {
-          transform: scale(0.95);
-          box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
-        }
-      }
-
-      .pulse-animation {
-        animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955)
-          infinite;
-      }
-
-      #reader {
-        border: none !important;
-        min-height: 400px;
-      }
-
-      #reader video {
-        border-radius: 1rem;
-      }
-
-      #reader__scan_region {
-        border-radius: 1rem !important;
-      }
-
-      #reader__dashboard_section {
-        display: none !important;
-      }
-
-      #reader__header_message {
-        display: none !important;
-      }
-
-      .file-upload-area {
-        border: 2px dashed rgba(99, 102, 241, 0.5);
-        transition: all 0.3s ease;
-      }
-
-      .file-upload-area:hover {
-        border-color: rgba(99, 102, 241, 0.8);
-        background: rgba(99, 102, 241, 0.05);
-      }
-
-      .file-upload-area.dragover {
-        border-color: #6366f1;
-        background: rgba(99, 102, 241, 0.1);
-      }
-
-      #fileInput {
-        display: none;
-      }
-
-      .tab-button.active {
-        background: linear-gradient(to right, #4f46e5, #7c3aed);
-        color: white;
-      }
-    </style>
-  </head>
-
-  <body class="text-gray-100 min-h-screen grid-bg">
-    <!-- Decorative Elements -->
-    <div
-      class="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden"
-    >
-      <div
-        class="absolute top-20 left-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"
-      ></div>
-      <div
-        class="absolute top-40 right-20 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl"
-      ></div>
-      <div
-        class="absolute bottom-20 right-10 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl"
-      ></div>
-      <div
-        class="absolute bottom-40 left-20 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl"
-      ></div>
+  <!-- Main Content -->
+  <main class="relative z-10 max-w-6xl mx-auto px-6 py-20">
+    
+    <!-- Page Title -->
+    <div class="text-center mb-16">
+      <div class="inline-block mb-4 px-5 py-2.5 rounded-full glass-card border border-indigo-500/50 text-sm neon-border">
+        <span class="text-indigo-300 font-semibold flex items-center gap-2">
+          <i class="fas fa-shield-check"></i>
+          Event Entry Verification
+        </span>
+      </div>
+      <h1 class="text-6xl font-bold mb-4">
+        <span class="text-white glow-text">Scan & Verify</span>
+        <br/>
+        <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+          NFT Tickets
+        </span>
+      </h1>
     </div>
 
-    <!-- Navbar -->
-    <nav class="relative z-10 border-b border-indigo-500/20 glass-card">
-      <div
-        class="max-w-6xl mx-auto px-6 py-5 flex justify-between items-center"
-      >
-        <a
-          href="index.html"
-          class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
-        >
-          <i
-            class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"
-          ></i>
-          <span>Back to Home</span>
-        </a>
-        <div class="flex items-center gap-3">
-          <div
-            class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center neon-border"
-          >
-            <i class="fas fa-qrcode text-2xl text-white"></i>
+    <div class="grid md:grid-cols-2 gap-10">
+      
+      <!-- Scanner Section -->
+      <div class="space-y-6">
+        <div class="glass-card rounded-2xl p-6 border border-indigo-500/30">
+          
+          <!-- Scanner Mode Tabs -->
+          <div class="flex gap-2 mb-4">
+            <button id="cameraTab" class="tab-button flex-1 px-4 py-2 rounded-lg glass-card border border-indigo-500/30 text-sm font-semibold text-gray-400 transition-all active">
+              <i class="fas fa-camera mr-2"></i>
+              Camera
+            </button>
+            <button id="fileTab" class="tab-button flex-1 px-4 py-2 rounded-lg glass-card border border-indigo-500/30 text-sm font-semibold text-gray-400 transition-all">
+              <i class="fas fa-file-image mr-2"></i>
+              Upload File
+            </button>
           </div>
-          <span class="font-bold text-2xl tracking-tight text-white glow-text"
-            >TICKET SCANNER</span
-          >
-        </div>
-      </div>
-    </nav>
 
-    <!-- Main -->
-    <main class="relative z-10 max-w-6xl mx-auto px-6 py-20">
-      <!-- Page Title -->
-      <div class="text-center mb-16">
-        <div
-          class="inline-block mb-4 px-5 py-2.5 rounded-full glass-card border border-indigo-500/50 text-sm neon-border"
-        >
-          <span class="text-indigo-300 font-semibold flex items-center gap-2">
-            <i class="fas fa-shield-check"></i>
-            Event Entry Verification
-          </span>
-        </div>
-        <h1 class="text-6xl font-bold mb-4">
-          <span class="text-white glow-text">Scan & Verify</span>
-          <br />
-          <span
-            class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
-          >
-            NFT Tickets
-          </span>
-        </h1>
-      </div>
-
-      <div class="grid md:grid-cols-2 gap-10">
-        <!-- Scanner Section -->
-        <div class="space-y-6">
-          <div class="glass-card rounded-2xl p-6 border border-indigo-500/30">
-            <!-- Scanner Mode Tabs -->
-            <div class="flex gap-2 mb-4">
-              <button
-                id="cameraTab"
-                class="tab-button flex-1 px-4 py-2 rounded-lg glass-card border border-indigo-500/30 text-sm font-semibold text-gray-400 transition-all active"
-              >
-                <i class="fas fa-camera mr-2"></i>
-                Camera
-              </button>
-              <button
-                id="fileTab"
-                class="tab-button flex-1 px-4 py-2 rounded-lg glass-card border border-indigo-500/30 text-sm font-semibold text-gray-400 transition-all"
-              >
-                <i class="fas fa-file-image mr-2"></i>
-                Upload File
-              </button>
-            </div>
-
-            <!-- Camera Mode -->
-            <div id="cameraMode">
-              <div class="flex items-center justify-between mb-4">
-                <h2
-                  class="text-xl font-semibold text-white flex items-center gap-2"
-                >
-                  <i class="fas fa-camera text-indigo-400"></i>
-                  Camera Preview
-                </h2>
-                <div class="flex items-center gap-2">
-                  <span
-                    id="statusDot"
-                    class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"
-                  ></span>
-                  <span
-                    id="statusText"
-                    class="text-yellow-400 text-sm font-semibold"
-                    >Initializing...</span
-                  >
-                </div>
-              </div>
-
-              <div class="relative rounded-xl overflow-hidden neon-border">
-                <div id="reader" class="w-full"></div>
-
-                <div id="errorMessage" class="hidden p-8 text-center">
-                  <i
-                    class="fas fa-exclamation-triangle text-5xl text-yellow-400 mb-4"
-                  ></i>
-                  <h3 class="text-white font-semibold text-lg mb-2">
-                    Camera Access Required
-                  </h3>
-                  <p class="text-gray-400 text-sm mb-4" id="errorText">
-                    Camera not available. Try using File Upload instead.
-                  </p>
-                  <button
-                    id="retryBtn"
-                    class="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 font-semibold text-white hover:scale-105 transition-all neon-border"
-                  >
-                    <i class="fas fa-redo mr-2"></i>
-                    Retry
-                  </button>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-2 gap-4 mt-4">
-                <button
-                  id="resetBtn"
-                  class="px-4 py-3 rounded-xl glass-card hover:neon-border transition-all duration-300 font-semibold border border-indigo-500/50 text-gray-200 hover:text-white flex items-center justify-center gap-2"
-                >
-                  <i class="fas fa-sync-alt"></i>
-                  Reset
-                </button>
-                <button
-                  id="toggleCamera"
-                  class="px-4 py-3 rounded-xl glass-card hover:neon-border transition-all duration-300 font-semibold border border-indigo-500/50 text-gray-200 hover:text-white flex items-center justify-center gap-2"
-                >
-                  <i class="fas fa-video-slash"></i>
-                  Stop Camera
-                </button>
-              </div>
-            </div>
-
-            <!-- File Upload Mode -->
-            <div id="fileMode" class="hidden">
-              <h2
-                class="text-xl font-semibold text-white flex items-center gap-2 mb-4"
-              >
-                <i class="fas fa-file-image text-indigo-400"></i>
-                Upload QR Code Image
+          <!-- Camera Mode -->
+          <div id="cameraMode">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                <i class="fas fa-camera text-indigo-400"></i>
+                Camera Preview
               </h2>
-
-              <div
-                id="fileUploadArea"
-                class="file-upload-area rounded-xl p-12 text-center cursor-pointer"
-              >
-                <i
-                  class="fas fa-cloud-upload-alt text-6xl text-indigo-400 mb-4"
-                ></i>
-                <h3 class="text-white font-semibold text-lg mb-2">
-                  Drop QR Code Here
-                </h3>
-                <p class="text-gray-500 text-sm mb-4">or click to browse</p>
-                <button
-                  type="button"
-                  class="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 font-semibold text-white hover:scale-105 transition-all neon-border"
-                >
-                  <i class="fas fa-folder-open mr-2"></i>
-                  Select Image
+              <div class="flex items-center gap-2">
+                <span id="statusDot" class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
+                <span id="statusText" class="text-yellow-400 text-sm font-semibold">Initializing...</span>
+              </div>
+            </div>
+            
+            <div class="relative rounded-xl overflow-hidden neon-border">
+              <div id="reader" class="w-full"></div>
+              
+              <div id="errorMessage" class="hidden p-8 text-center">
+                <i class="fas fa-exclamation-triangle text-5xl text-yellow-400 mb-4"></i>
+                <h3 class="text-white font-semibold text-lg mb-2">Camera Access Required</h3>
+                <p class="text-gray-400 text-sm mb-4" id="errorText">Camera not available. Try using File Upload instead.</p>
+                <button id="retryBtn" class="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 font-semibold text-white hover:scale-105 transition-all neon-border">
+                  <i class="fas fa-redo mr-2"></i>
+                  Retry
                 </button>
               </div>
-              <input type="file" id="fileInput" accept="image/*" />
+            </div>
 
-              <div
-                id="filePreview"
-                class="hidden mt-4 rounded-xl overflow-hidden neon-border"
-              >
-                <img id="previewImage" class="w-full" alt="QR Code Preview" />
-              </div>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+              <button id="resetBtn" class="scanner-control px-4 py-3 rounded-xl glass-card hover:neon-border transition-all duration-300 font-semibold border border-indigo-500/50 text-gray-200 hover:text-white flex items-center justify-center gap-2">
+                <i class="fas fa-sync-alt"></i>
+                Reset
+              </button>
+              <button id="toggleCamera" class="scanner-control px-4 py-3 rounded-xl glass-card hover:neon-border transition-all duration-300 font-semibold border border-indigo-500/50 text-gray-200 hover:text-white flex items-center justify-center gap-2">
+                <i class="fas fa-video-slash"></i>
+                Stop Camera
+              </button>
             </div>
           </div>
 
-          <!-- Tips Card -->
-          <div class="glass-card rounded-xl p-4 border border-indigo-500/30">
-            <div class="flex items-start gap-3">
-              <i class="fas fa-lightbulb text-yellow-400 text-xl mt-1"></i>
-              <div>
-                <h3 class="text-white font-semibold mb-1">Scanner Tips</h3>
-                <ul class="text-gray-500 text-sm space-y-1">
-                  <li>• Camera works on HTTPS or localhost</li>
-                  <li>• Use File Upload for HTTP testing</li>
-                  <li>• Ensure good lighting for camera scan</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Result Section -->
-        <div class="space-y-6">
-          <div class="glass-card rounded-2xl p-6 border border-indigo-500/30">
-            <h2
-              class="text-xl font-semibold text-white mb-6 flex items-center gap-2"
-            >
-              <i class="fas fa-clipboard-check text-purple-400"></i>
-              Scan Result
+          <!-- File Upload Mode -->
+          <div id="fileMode" class="hidden">
+            <h2 class="text-xl font-semibold text-white flex items-center gap-2 mb-4">
+              <i class="fas fa-file-image text-indigo-400"></i>
+              Upload QR Code Image
             </h2>
 
-            <div
-              id="statusCard"
-              class="mb-6 p-6 rounded-xl glass-card border border-yellow-500/30 text-center"
-            >
-              <div
-                class="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center pulse-animation"
-              >
-                <i class="fas fa-hourglass-half text-3xl text-yellow-400"></i>
-              </div>
-              <div class="text-yellow-400 font-semibold text-lg mb-1">
-                Waiting for Scan
-              </div>
-              <div class="text-gray-500 text-sm">
-                Point camera or upload QR code
-              </div>
+            <div id="fileUploadArea" class="file-upload-area rounded-xl p-12 text-center cursor-pointer">
+              <i class="fas fa-cloud-upload-alt text-6xl text-indigo-400 mb-4"></i>
+              <h3 class="text-white font-semibold text-lg mb-2">Drop QR Code Here</h3>
+              <p class="text-gray-500 text-sm mb-4">or click to browse</p>
+              <button type="button" class="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 font-semibold text-white hover:scale-105 transition-all neon-border">
+                <i class="fas fa-folder-open mr-2"></i>
+                Select Image
+              </button>
             </div>
+            <input type="file" id="fileInput" accept="image/*" />
 
-            <div class="space-y-4">
-              <div
-                class="flex justify-between items-center text-sm border-b border-indigo-500/20 pb-3"
-              >
-                <span class="text-gray-500 flex items-center gap-2">
-                  <i class="fas fa-wallet text-indigo-400"></i>
-                  Wallet Address
-                </span>
-                <span id="walletAddr" class="font-mono text-gray-600">-</span>
-              </div>
-              <div
-                class="flex justify-between items-center text-sm border-b border-indigo-500/20 pb-3"
-              >
-                <span class="text-gray-500 flex items-center gap-2">
-                  <i class="fas fa-hashtag text-purple-400"></i>
-                  Token ID
-                </span>
-                <span id="tokenId" class="font-mono text-gray-600">-</span>
-              </div>
-              <div
-                class="flex justify-between items-center text-sm border-b border-indigo-500/20 pb-3"
-              >
-                <span class="text-gray-500 flex items-center gap-2">
-                  <i class="fas fa-calendar text-pink-400"></i>
-                  Event
-                </span>
-                <span id="eventName" class="text-gray-600">-</span>
-              </div>
-              <div class="flex justify-between items-center text-sm">
-                <span class="text-gray-500 flex items-center gap-2">
-                  <i class="fas fa-check-circle text-emerald-400"></i>
-                  Verification
-                </span>
-                <span id="verification" class="text-gray-600">-</span>
-              </div>
+            <div id="filePreview" class="hidden mt-4 rounded-xl overflow-hidden neon-border">
+              <img id="previewImage" class="w-full" alt="QR Code Preview" />
             </div>
           </div>
 
-          <button
-            id="confirmBtn"
-            disabled
-            class="w-full px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 font-bold text-lg transition-all duration-300 neon-border text-white opacity-50 cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            <i class="fas fa-door-open text-xl"></i>
-            Confirm Entry
-          </button>
+        </div>
 
-          <div class="glass-card rounded-xl p-4 border border-indigo-500/30">
-            <div class="flex items-start gap-3">
-              <i class="fas fa-info-circle text-indigo-400 text-xl mt-1"></i>
-              <div>
-                <h3 class="text-white font-semibold mb-1">How to Scan</h3>
-                <p class="text-gray-500 text-sm leading-relaxed">
-                  Use camera mode for live scanning or upload mode to scan QR
-                  code from image file.
-                </p>
-              </div>
+        <!-- Tips Card -->
+        <div class="glass-card rounded-xl p-4 border border-indigo-500/30">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-lightbulb text-yellow-400 text-xl mt-1"></i>
+            <div>
+              <h3 class="text-white font-semibold mb-1">Scanner Tips</h3>
+              <ul class="text-gray-500 text-sm space-y-1">
+                <li>• Camera works on HTTPS or localhost</li>
+                <li>• Use File Upload for HTTP testing</li>
+                <li>• Ensure good lighting for camera scan</li>
+              </ul>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Stats Section -->
-      <div
-        class="grid md:grid-cols-4 gap-6 mt-16 glass-card rounded-2xl p-8 border border-indigo-500/30"
-      >
-        <div class="text-center">
-          <div
-            id="scannedCount"
-            class="text-3xl font-bold text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text mb-2"
-          >
-            0
-          </div>
-          <div class="text-sm text-gray-500">Scanned Today</div>
-        </div>
-        <div class="text-center">
-          <div
-            id="verifiedCount"
-            class="text-3xl font-bold text-transparent bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text mb-2"
-          >
-            0
-          </div>
-          <div class="text-sm text-gray-500">Verified</div>
-        </div>
-        <div class="text-center">
-          <div
-            id="rejectedCount"
-            class="text-3xl font-bold text-transparent bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text mb-2"
-          >
-            0
-          </div>
-          <div class="text-sm text-gray-500">Rejected</div>
-        </div>
-        <div class="text-center">
-          <div
-            id="pendingCount"
-            class="text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text mb-2"
-          >
-            0
-          </div>
-          <div class="text-sm text-gray-500">Pending</div>
-        </div>
-      </div>
-    </main>
+      <!-- Result Section -->
+      <div class="space-y-6">
+        <div class="glass-card rounded-2xl p-6 border border-indigo-500/30">
+          <h2 class="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+            <i class="fas fa-clipboard-check text-purple-400"></i>
+            Scan Result
+          </h2>
 
-    <!-- Footer -->
-    <footer
-      class="relative z-10 border-t border-indigo-500/20 glass-card mt-20"
-    >
-      <div class="max-w-6xl mx-auto px-6 py-8">
-        <div
-          class="flex flex-col md:flex-row justify-between items-center gap-4"
-        >
-          <div class="flex items-center gap-2 text-gray-400 text-sm">
-            <i class="fas fa-copyright"></i>
-            <span>2026 NFT Ticket. Built on Ethereum.</span>
+          <div id="statusCard" class="mb-6 p-6 rounded-xl glass-card border border-yellow-500/30 text-center">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center pulse-animation">
+              <i class="fas fa-hourglass-half text-3xl text-yellow-400"></i>
+            </div>
+            <div class="text-yellow-400 font-semibold text-lg mb-1">Waiting for Scan</div>
+            <div class="text-gray-500 text-sm">Point camera or upload QR code</div>
           </div>
-          <div class="flex items-center gap-6">
-            <a
-              href="#"
-              class="text-gray-400 hover:text-indigo-400 transition-colors"
-            >
-              <i class="fab fa-twitter text-xl"></i>
-            </a>
-            <a
-              href="#"
-              class="text-gray-400 hover:text-indigo-400 transition-colors"
-            >
-              <i class="fab fa-discord text-xl"></i>
-            </a>
-            <a
-              href="#"
-              class="text-gray-400 hover:text-indigo-400 transition-colors"
-            >
-              <i class="fab fa-github text-xl"></i>
-            </a>
+
+          <div class="space-y-4">
+            <div class="flex justify-between items-center text-sm border-b border-indigo-500/20 pb-3">
+              <span class="text-gray-500 flex items-center gap-2">
+                <i class="fas fa-wallet text-indigo-400"></i>
+                Wallet Address
+              </span>
+              <span id="walletAddr" class="font-mono text-gray-600">-</span>
+            </div>
+            <div class="flex justify-between items-center text-sm border-b border-indigo-500/20 pb-3">
+              <span class="text-gray-500 flex items-center gap-2">
+                <i class="fas fa-hashtag text-purple-400"></i>
+                Token ID
+              </span>
+              <span id="tokenId" class="font-mono text-gray-600">-</span>
+            </div>
+            <div class="flex justify-between items-center text-sm border-b border-indigo-500/20 pb-3">
+              <span class="text-gray-500 flex items-center gap-2">
+                <i class="fas fa-calendar text-pink-400"></i>
+                Event
+              </span>
+              <span id="eventName" class="text-gray-600">-</span>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-gray-500 flex items-center gap-2">
+                <i class="fas fa-check-circle text-emerald-400"></i>
+                Verification
+              </span>
+              <span id="verification" class="text-gray-600">-</span>
+            </div>
+          </div>
+        </div>
+
+        <button id="confirmBtn" disabled class="w-full px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 font-bold text-lg transition-all duration-300 neon-border text-white opacity-50 cursor-not-allowed flex items-center justify-center gap-2">
+          <i class="fas fa-door-open text-xl"></i>
+          Confirm Entry
+        </button>
+
+        <div class="glass-card rounded-xl p-4 border border-indigo-500/30">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-info-circle text-indigo-400 text-xl mt-1"></i>
+            <div>
+              <h3 class="text-white font-semibold mb-1">How to Scan</h3>
+              <p class="text-gray-500 text-sm leading-relaxed">
+                Use camera mode for live scanning or upload mode to scan QR code from image file.
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </footer>
 
-    <script>
-      let html5QrCode;
-      let isScanning = false;
-      let currentMode = "camera";
+    </div>
 
-      let stats = {
-        scanned: 0,
-        verified: 0,
-        rejected: 0,
-        pending: 0,
-      };
+    <!-- Stats Section -->
+    <div class="grid md:grid-cols-4 gap-6 mt-16 glass-card rounded-2xl p-8 border border-indigo-500/30">
+      <div class="stat-card text-center">
+        <div id="scannedCount" class="text-3xl font-bold text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text mb-2">0</div>
+        <div class="text-sm text-gray-500">Scanned Today</div>
+      </div>
+      <div class="stat-card text-center">
+        <div id="verifiedCount" class="text-3xl font-bold text-transparent bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text mb-2">0</div>
+        <div class="text-sm text-gray-500">Verified</div>
+      </div>
+      <div class="stat-card text-center">
+        <div id="rejectedCount" class="text-3xl font-bold text-transparent bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text mb-2">0</div>
+        <div class="text-sm text-gray-500">Rejected</div>
+      </div>
+      <div class="stat-card text-center">
+        <div id="pendingCount" class="text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text mb-2">0</div>
+        <div class="text-sm text-gray-500">Pending</div>
+      </div>
+    </div>
 
-      // Tab switching
-      document.getElementById("cameraTab").addEventListener("click", () => {
-        switchMode("camera");
-      });
+  </main>
 
-      document.getElementById("fileTab").addEventListener("click", () => {
-        switchMode("file");
-      });
-
-      function switchMode(mode) {
-        currentMode = mode;
-
-        if (mode === "camera") {
-          document.getElementById("cameraMode").classList.remove("hidden");
-          document.getElementById("fileMode").classList.add("hidden");
-          document.getElementById("cameraTab").classList.add("active");
-          document.getElementById("fileTab").classList.remove("active");
-
-          if (!isScanning) {
-            setTimeout(() => startScanner(), 300);
-          }
-        } else {
-          document.getElementById("cameraMode").classList.add("hidden");
-          document.getElementById("fileMode").classList.remove("hidden");
-          document.getElementById("cameraTab").classList.remove("active");
-          document.getElementById("fileTab").classList.add("active");
-
-          if (isScanning) {
-            stopScanner();
-          }
-        }
-      }
-
-      // File upload handling
-      const fileUploadArea = document.getElementById("fileUploadArea");
-      const fileInput = document.getElementById("fileInput");
-      const filePreview = document.getElementById("filePreview");
-      const previewImage = document.getElementById("previewImage");
-
-      fileUploadArea.addEventListener("click", () => {
-        fileInput.click();
-      });
-
-      fileUploadArea.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        fileUploadArea.classList.add("dragover");
-      });
-
-      fileUploadArea.addEventListener("dragleave", () => {
-        fileUploadArea.classList.remove("dragover");
-      });
-
-      fileUploadArea.addEventListener("drop", (e) => {
-        e.preventDefault();
-        fileUploadArea.classList.remove("dragover");
-
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-          handleFileUpload(files[0]);
-        }
-      });
-
-      fileInput.addEventListener("change", (e) => {
-        if (e.target.files.length > 0) {
-          handleFileUpload(e.target.files[0]);
-        }
-      });
-
-      function handleFileUpload(file) {
-        if (!file.type.startsWith("image/")) {
-          alert("Please upload an image file");
-          return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          previewImage.src = e.target.result;
-          filePreview.classList.remove("hidden");
-
-          // Scan the uploaded image
-          html5QrCode = new Html5Qrcode("reader");
-          html5QrCode
-            .scanFile(file, true)
-            .then((decodedText) => {
-              onScanSuccess(decodedText, null);
-            })
-            .catch((err) => {
-              console.error("Scan error:", err);
-              updateStatusCard(
-                "error",
-                "No QR Code Found",
-                "Image does not contain a valid QR code"
-              );
-            });
-        };
-        reader.readAsDataURL(file);
-      }
-
-      function onScanSuccess(decodedText, decodedResult) {
-        console.log("QR Code detected:", decodedText);
-
-        stats.scanned++;
-        stats.pending++;
-        updateStats();
-
-        updateStatusCard(
-          "processing",
-          "Processing...",
-          "Verifying ticket on blockchain"
-        );
-
-        setTimeout(() => {
-          verifyTicket(decodedText);
-        }, 2000);
-      }
-
-      function verifyTicket(qrData) {
-        try {
-          let ticketData;
-          try {
-            ticketData = JSON.parse(qrData);
-          } catch {
-            ticketData = {
-              wallet:
-                "0x" +
-                qrData.substring(0, 8) +
-                "..." +
-                qrData.substring(qrData.length - 4),
-              tokenId: "#" + Math.floor(Math.random() * 9999),
-              event: "Web3 Summit 2026",
-            };
-          }
-
-          const isValid = Math.random() > 0.2;
-
-          if (isValid) {
-            stats.verified++;
-            stats.pending--;
-            updateStats();
-
-            updateStatusCard("success", "Valid Ticket!", "Entry approved");
-            document.getElementById("walletAddr").textContent =
-              ticketData.wallet || "0x1234...5678";
-            document.getElementById("tokenId").textContent =
-              ticketData.tokenId || "#1234";
-            document.getElementById("eventName").textContent =
-              ticketData.event || "Web3 Summit 2026";
-            document.getElementById("verification").innerHTML =
-              '<span class="text-emerald-400 font-semibold">✓ Verified</span>';
-
-            const confirmBtn = document.getElementById("confirmBtn");
-            confirmBtn.disabled = false;
-            confirmBtn.classList.remove("opacity-50", "cursor-not-allowed");
-            confirmBtn.classList.add("hover:scale-105");
-          } else {
-            stats.rejected++;
-            stats.pending--;
-            updateStats();
-
-            updateStatusCard("error", "Invalid Ticket", "Entry denied");
-            document.getElementById("walletAddr").textContent = "-";
-            document.getElementById("tokenId").textContent = "-";
-            document.getElementById("eventName").textContent = "-";
-            document.getElementById("verification").innerHTML =
-              '<span class="text-red-400 font-semibold">✗ Invalid</span>';
-          }
-        } catch (error) {
-          console.error("Error verifying ticket:", error);
-          stats.rejected++;
-          stats.pending--;
-          updateStats();
-          updateStatusCard("error", "Invalid QR Code", "Not a valid ticket");
-        }
-      }
-
-      function updateStatusCard(type, title, subtitle) {
-        const statusCard = document.getElementById("statusCard");
-
-        const templates = {
-          success: {
-            className:
-              "mb-6 p-6 rounded-xl glass-card border border-emerald-500/30 text-center",
-            icon: "fa-check-circle",
-            iconColor: "text-emerald-400",
-            bgColor: "bg-emerald-500/20",
-          },
-          error: {
-            className:
-              "mb-6 p-6 rounded-xl glass-card border border-red-500/30 text-center",
-            icon: "fa-times-circle",
-            iconColor: "text-red-400",
-            bgColor: "bg-red-500/20",
-          },
-          processing: {
-            className:
-              "mb-6 p-6 rounded-xl glass-card border border-blue-500/30 text-center",
-            icon: "fa-spinner fa-spin",
-            iconColor: "text-blue-400",
-            bgColor: "bg-blue-500/20",
-          },
-          waiting: {
-            className:
-              "mb-6 p-6 rounded-xl glass-card border border-yellow-500/30 text-center",
-            icon: "fa-hourglass-half",
-            iconColor: "text-yellow-400",
-            bgColor: "bg-yellow-500/20",
-          },
-        };
-
-        const template = templates[type] || templates.waiting;
-
-        statusCard.className = template.className;
-        statusCard.innerHTML = `
-        <div class="w-16 h-16 mx-auto mb-4 rounded-full ${template.bgColor} flex items-center justify-center pulse-animation">
-          <i class="fas ${template.icon} text-3xl ${template.iconColor}"></i>
+  <!-- Footer -->
+  <footer class="relative z-10 border-t border-indigo-500/20 glass-card mt-20">
+    <div class="max-w-6xl mx-auto px-6 py-8">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-2 text-gray-400 text-sm">
+          <i class="fas fa-copyright"></i>
+          <span>2026 NFT Ticket. Built on Ethereum.</span>
         </div>
-        <div class="${template.iconColor} font-semibold text-lg mb-1">${title}</div>
-        <div class="text-gray-500 text-sm">${subtitle}</div>
-      `;
-      }
+        <div class="flex items-center gap-6">
+          <a href="#" class="text-gray-400 hover:text-indigo-400 transition-colors">
+            <i class="fab fa-twitter text-xl"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-indigo-400 transition-colors">
+            <i class="fab fa-discord text-xl"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-indigo-400 transition-colors">
+            <i class="fab fa-github text-xl"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
 
-      function updateStats() {
-        document.getElementById("scannedCount").textContent = stats.scanned;
-        document.getElementById("verifiedCount").textContent = stats.verified;
-        document.getElementById("rejectedCount").textContent = stats.rejected;
-        document.getElementById("pendingCount").textContent = stats.pending;
-      }
+  <!-- Custom Scripts -->
+  <script src="js/scanner.js"></script>
 
-      function onScanError(errorMessage) {}
-
-      function showError(message) {
-        document.getElementById("reader").style.display = "none";
-        document.getElementById("errorMessage").classList.remove("hidden");
-        document.getElementById("errorText").textContent = message;
-        document
-          .getElementById("statusDot")
-          .classList.remove("bg-yellow-400", "bg-emerald-400");
-        document.getElementById("statusDot").classList.add("bg-red-400");
-        document.getElementById("statusText").textContent = "Error";
-        document.getElementById("statusText").classList.add("text-red-400");
-      }
-
-      function startScanner() {
-        document.getElementById("reader").style.display = "block";
-        document.getElementById("errorMessage").classList.add("hidden");
-        document
-          .getElementById("statusDot")
-          .classList.remove("bg-red-400", "bg-gray-400");
-        document.getElementById("statusDot").classList.add("bg-yellow-400");
-        document.getElementById("statusText").textContent = "Starting...";
-        document.getElementById("statusText").classList.remove("text-red-400");
-        document.getElementById("statusText").classList.add("text-yellow-400");
-
-        html5QrCode = new Html5Qrcode("reader");
-        const config = {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-        };
-
-        Html5Qrcode.getCameras()
-          .then((devices) => {
-            if (devices && devices.length) {
-              const cameraId = devices[0].id;
-
-              html5QrCode
-                .start(cameraId, config, onScanSuccess, onScanError)
-                .then(() => {
-                  isScanning = true;
-                  document
-                    .getElementById("statusDot")
-                    .classList.remove("bg-yellow-400");
-                  document
-                    .getElementById("statusDot")
-                    .classList.add("bg-emerald-400");
-                  document.getElementById("statusText").textContent = "Active";
-                  document
-                    .getElementById("statusText")
-                    .classList.remove("text-yellow-400");
-                  document
-                    .getElementById("statusText")
-                    .classList.add("text-emerald-400");
-                  document.getElementById("toggleCamera").innerHTML =
-                    '<i class="fas fa-video-slash"></i> Stop Camera';
-                })
-                .catch((err) => {
-                  console.error("Camera start error:", err);
-                  showError(
-                    "Unable to access camera. Try using File Upload mode instead."
-                  );
-                });
-            } else {
-              showError("No camera found. Use File Upload mode instead.");
-            }
-          })
-          .catch((err) => {
-            console.error("Camera enumeration error:", err);
-            showError(
-              "Camera not available on HTTP. Use File Upload mode or switch to HTTPS."
-            );
-          });
-      }
-
-      function stopScanner() {
-        if (html5QrCode && isScanning) {
-          html5QrCode.stop().then(() => {
-            isScanning = false;
-            document
-              .getElementById("statusDot")
-              .classList.remove("bg-emerald-400");
-            document.getElementById("statusDot").classList.add("bg-gray-400");
-            document.getElementById("statusText").textContent = "Stopped";
-            document
-              .getElementById("statusText")
-              .classList.remove("text-emerald-400");
-            document
-              .getElementById("statusText")
-              .classList.add("text-gray-400");
-            document.getElementById("toggleCamera").innerHTML =
-              '<i class="fas fa-video"></i> Start Camera';
-          });
-        }
-      }
-
-      function resetScan() {
-        document.getElementById("walletAddr").textContent = "-";
-        document.getElementById("tokenId").textContent = "-";
-        document.getElementById("eventName").textContent = "-";
-        document.getElementById("verification").textContent = "-";
-
-        const confirmBtn = document.getElementById("confirmBtn");
-        confirmBtn.disabled = true;
-        confirmBtn.classList.add("opacity-50", "cursor-not-allowed");
-        confirmBtn.classList.remove("hover:scale-105");
-
-        updateStatusCard(
-          "waiting",
-          "Waiting for Scan",
-          "Point camera or upload QR code"
-        );
-
-        filePreview.classList.add("hidden");
-        fileInput.value = "";
-      }
-
-      document.getElementById("toggleCamera").addEventListener("click", () => {
-        if (isScanning) {
-          stopScanner();
-        } else {
-          startScanner();
-        }
-      });
-
-      document.getElementById("resetBtn").addEventListener("click", resetScan);
-
-      document.getElementById("retryBtn").addEventListener("click", () => {
-        startScanner();
-      });
-
-      document.getElementById("confirmBtn").addEventListener("click", () => {
-        alert("Entry confirmed! Attendee has been checked in.");
-        resetScan();
-      });
-
-      window.addEventListener("load", () => {
-        setTimeout(() => {
-          startScanner();
-        }, 500);
-      });
-
-      window.addEventListener("beforeunload", () => {
-        if (html5QrCode && isScanning) {
-          html5QrCode.stop();
-        }
-      });
-    </script>
-  </body>
+</body>
 </html>
