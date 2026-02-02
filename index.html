@@ -30,35 +30,79 @@
     <!-- Navbar -->
     <nav class="relative z-10 border-b border-indigo-500/20 glass-card">
       <div class="max-w-6xl mx-auto px-6 py-5 flex justify-between items-center">
-        <div class="flex items-center gap-3">
+        
+        <!-- Logo -->
+        <a href="index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center neon-border">
             <i class="fas fa-ticket text-2xl text-white"></i>
           </div>
           <span class="font-bold text-2xl tracking-tight text-white glow-text">NFT TICKET</span>
-        </div>
+        </a>
 
-        <!-- Wallet Connection Button -->
-        <div id="walletSection">
-          <button id="connectBtn" class="px-6 py-3 rounded-lg glass-card hover:neon-border transition-all duration-300 font-semibold border border-indigo-500/50 text-gray-200 hover:text-white">
-            <span class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-red-400 animate-pulse shadow-lg shadow-red-400/50"></span>
-              Connect Wallet
-            </span>
+        <!-- Navigation Links + Wallet Section -->
+        <div class="flex items-center gap-4">
+          
+          <!-- Nav Links -->
+          <div class="hidden md:flex items-center gap-3">
+            <a href="index.html" class="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 neon-border text-white font-semibold">
+              <i class="fas fa-wand-magic-sparkles mr-2"></i>Mint
+            </a>
+            <a href="my-ticket.html" class="px-4 py-2 rounded-lg glass-card hover:neon-border transition-all text-gray-300 hover:text-white">
+              <i class="fas fa-id-card mr-2"></i>My Ticket
+            </a>
+            <a href="scanner.html" class="px-4 py-2 rounded-lg glass-card hover:neon-border transition-all text-gray-300 hover:text-white">
+              <i class="fas fa-qrcode mr-2"></i>Scanner
+            </a>
+          </div>
+
+          <!-- Divider -->
+          <div class="hidden md:block w-px h-8 bg-indigo-500/30"></div>
+
+          <!-- Wallet Connection -->
+          <div id="walletSection">
+            <button id="connectBtn" class="px-6 py-3 rounded-lg glass-card hover:neon-border transition-all duration-300 font-semibold border border-indigo-500/50 text-gray-200 hover:text-white">
+              <span class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-red-400 animate-pulse shadow-lg shadow-red-400/50"></span>
+                Connect Wallet
+              </span>
+            </button>
+
+            <div id="walletInfo" class="hidden flex items-center gap-3">
+              <div class="glass-card px-4 py-2 rounded-lg border border-emerald-500/50">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-400/50"></span>
+                  <span id="walletAddress" class="font-mono text-sm text-gray-200">0x0000...0000</span>
+                </div>
+              </div>
+              <button id="disconnectBtn" class="px-4 py-2 rounded-lg glass-card hover:neon-border transition-all duration-300 border border-red-500/50 text-gray-400 hover:text-red-400">
+                <i class="fas fa-power-off"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Mobile Menu Button -->
+          <button id="mobileMenuBtn" class="md:hidden px-3 py-2 rounded-lg glass-card border border-indigo-500/50 text-gray-300">
+            <i class="fas fa-bars text-xl"></i>
           </button>
 
-          <div id="walletInfo" class="hidden flex items-center gap-3">
-            <div class="glass-card px-4 py-2 rounded-lg border border-emerald-500/50">
-              <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-400/50"></span>
-                <span id="walletAddress" class="font-mono text-sm text-gray-200">0x0000...0000</span>
-              </div>
-            </div>
-            <button id="disconnectBtn" class="px-4 py-2 rounded-lg glass-card hover:neon-border transition-all duration-300 border border-red-500/50 text-gray-400 hover:text-red-400">
-              <i class="fas fa-power-off"></i>
-            </button>
-          </div>
         </div>
       </div>
+
+      <!-- Mobile Menu -->
+      <div id="mobileMenu" class="hidden md:hidden border-t border-indigo-500/20">
+        <div class="max-w-6xl mx-auto px-6 py-4 space-y-2">
+          <a href="index.html" class="block px-4 py-3 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold">
+            <i class="fas fa-wand-magic-sparkles mr-2"></i>Mint Ticket
+          </a>
+          <a href="my-ticket.html" class="block px-4 py-3 rounded-lg glass-card hover:neon-border transition-all text-gray-300 hover:text-white">
+            <i class="fas fa-id-card mr-2"></i>My Ticket
+          </a>
+          <a href="scanner.html" class="block px-4 py-3 rounded-lg glass-card hover:neon-border transition-all text-gray-300 hover:text-white">
+            <i class="fas fa-qrcode mr-2"></i>Scanner
+          </a>
+        </div>
+      </div>
+
     </nav>
 
     <!-- Main Content -->
@@ -132,7 +176,7 @@
         <div id="statusBox" class="mt-8 text-sm text-gray-400 min-h-[24px]"></div>
       </div>
 
-      <!-- ✅ QR CODE SECTION - IMPROVED -->
+      <!-- ✅ QR CODE SECTION -->
       <div id="qrSection" class="hidden max-w-2xl mx-auto mb-20">
         <div class="glass-card rounded-3xl p-10 border-2 border-emerald-500/50 neon-border">
           
@@ -172,9 +216,9 @@
               <i class="fas fa-download mr-2"></i>
               Download QR Code
             </button>
-            <a href="scanner.html" class="flex-1 px-6 py-4 rounded-xl glass-card border border-indigo-500/50 font-bold text-center text-white hover:neon-border transition-all">
-              <i class="fas fa-qrcode mr-2"></i>
-              Test Scanner
+            <a href="my-ticket.html" class="flex-1 px-6 py-4 rounded-xl glass-card border border-indigo-500/50 font-bold text-center text-white hover:neon-border transition-all">
+              <i class="fas fa-id-card mr-2"></i>
+              View My Ticket
             </a>
           </div>
 
@@ -264,7 +308,14 @@
       </div>
     </footer>
 
-    <!-- ✅ ONLY ONE SCRIPT - wallet.js (includes minting + QR) -->
     <script src="js/wallet.js"></script>
+    
+    <script>
+      document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+        const menu = document.getElementById('mobileMenu');
+        menu.classList.toggle('hidden');
+      });
+    </script>
+
   </body>
 </html>

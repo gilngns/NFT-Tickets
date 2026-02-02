@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Ticket Scanner — NFT Ticket</title>
+  <title>QR Scanner — NFT Ticket</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  
-  <!-- External Libraries -->
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
   
-  <!-- Custom Styles -->
+  <!-- HTML5 QR Code Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
   <link rel="stylesheet" href="css/main.css" />
-  <link rel="stylesheet" href="css/scanner.css" />
 </head>
 
 <body class="text-gray-100 min-h-screen grid-bg">
@@ -28,223 +28,177 @@
   <!-- Navbar -->
   <nav class="relative z-10 border-b border-indigo-500/20 glass-card">
     <div class="max-w-6xl mx-auto px-6 py-5 flex justify-between items-center">
-      <a href="index.html" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group">
-        <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
-        <span>Back to Home</span>
-      </a>
-      <div class="flex items-center gap-3">
+      <a href="index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
         <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center neon-border">
-          <i class="fas fa-qrcode text-2xl text-white"></i>
+          <i class="fas fa-ticket text-2xl text-white"></i>
         </div>
-        <span class="font-bold text-2xl tracking-tight text-white glow-text">TICKET SCANNER</span>
+        <span class="font-bold text-2xl tracking-tight text-white glow-text">NFT TICKET</span>
+      </a>
+      
+      <!-- Navigation Links -->
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="px-4 py-2 rounded-lg glass-card hover:neon-border transition-all text-gray-300 hover:text-white">
+          <i class="fas fa-home mr-2"></i>Mint
+        </a>
+        <a href="my-ticket.html" class="px-4 py-2 rounded-lg glass-card hover:neon-border transition-all text-gray-300 hover:text-white">
+          <i class="fas fa-id-card mr-2"></i>My Ticket
+        </a>
+        <a href="scanner.html" class="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 neon-border text-white font-semibold">
+          <i class="fas fa-qrcode mr-2"></i>Scanner
+        </a>
       </div>
     </div>
   </nav>
 
   <!-- Main Content -->
-  <main class="relative z-10 max-w-6xl mx-auto px-6 py-20">
+  <main class="relative z-10 max-w-4xl mx-auto px-6 py-16">
     
-    <!-- Page Title -->
-    <div class="text-center mb-16">
-      <div class="inline-block mb-4 px-5 py-2.5 rounded-full glass-card border border-indigo-500/50 text-sm neon-border">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <div class="inline-block mb-6 px-5 py-2.5 rounded-full glass-card border border-indigo-500/50 text-sm neon-border">
         <span class="text-indigo-300 font-semibold flex items-center gap-2">
-          <i class="fas fa-shield-check"></i>
-          Event Entry Verification
+          <i class="fas fa-qrcode"></i>
+          Ticket Verification
         </span>
       </div>
-      <h1 class="text-6xl font-bold mb-4">
-        <span class="text-white glow-text">Scan & Verify</span>
-        <br/>
+      <h1 class="text-6xl font-bold mb-4 leading-tight">
         <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-          NFT Tickets
+          QR Scanner
         </span>
       </h1>
+      <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+        Scan NFT ticket QR codes to verify blockchain ownership
+      </p>
     </div>
 
-    <div class="grid md:grid-cols-2 gap-10">
+    <!-- Scanner Section -->
+    <div class="glass-card rounded-3xl p-8 mb-8 pulse-border">
       
-      <!-- Scanner Section -->
-      <div class="space-y-6">
-        <div class="glass-card rounded-2xl p-6 border border-indigo-500/30">
-          
-          <!-- Scanner Mode Tabs -->
-          <div class="flex gap-2 mb-4">
-            <button id="cameraTab" class="tab-button flex-1 px-4 py-2 rounded-lg glass-card border border-indigo-500/30 text-sm font-semibold text-gray-400 transition-all active">
-              <i class="fas fa-camera mr-2"></i>
-              Camera
-            </button>
-            <button id="fileTab" class="tab-button flex-1 px-4 py-2 rounded-lg glass-card border border-indigo-500/30 text-sm font-semibold text-gray-400 transition-all">
-              <i class="fas fa-file-image mr-2"></i>
-              Upload File
-            </button>
-          </div>
+      <!-- Scanner Mode Toggle -->
+      <div class="flex justify-center gap-4 mb-6">
+        <button id="cameraBtn" onclick="switchMode('camera')" class="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 neon-border text-white font-semibold">
+          <i class="fas fa-camera mr-2"></i>
+          Camera Scan
+        </button>
+        <button id="manualBtn" onclick="switchMode('manual')" class="px-6 py-3 rounded-xl glass-card border border-indigo-500/50 text-gray-300 hover:neon-border transition-all">
+          <i class="fas fa-keyboard mr-2"></i>
+          Manual Input
+        </button>
+      </div>
 
-          <!-- Camera Mode -->
-          <div id="cameraMode">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-semibold text-white flex items-center gap-2">
-                <i class="fas fa-camera text-indigo-400"></i>
-                Camera Preview
-              </h2>
-              <div class="flex items-center gap-2">
-                <span id="statusDot" class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
-                <span id="statusText" class="text-yellow-400 text-sm font-semibold">Initializing...</span>
-              </div>
-            </div>
-            
-            <div class="relative rounded-xl overflow-hidden neon-border">
-              <div id="reader" class="w-full"></div>
-              
-              <div id="errorMessage" class="hidden p-8 text-center">
-                <i class="fas fa-exclamation-triangle text-5xl text-yellow-400 mb-4"></i>
-                <h3 class="text-white font-semibold text-lg mb-2">Camera Access Required</h3>
-                <p class="text-gray-400 text-sm mb-4" id="errorText">Camera not available. Try using File Upload instead.</p>
-                <button id="retryBtn" class="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 font-semibold text-white hover:scale-105 transition-all neon-border">
-                  <i class="fas fa-redo mr-2"></i>
-                  Retry
-                </button>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 mt-4">
-              <button id="resetBtn" class="scanner-control px-4 py-3 rounded-xl glass-card hover:neon-border transition-all duration-300 font-semibold border border-indigo-500/50 text-gray-200 hover:text-white flex items-center justify-center gap-2">
-                <i class="fas fa-sync-alt"></i>
-                Reset
-              </button>
-              <button id="toggleCamera" class="scanner-control px-4 py-3 rounded-xl glass-card hover:neon-border transition-all duration-300 font-semibold border border-indigo-500/50 text-gray-200 hover:text-white flex items-center justify-center gap-2">
-                <i class="fas fa-video-slash"></i>
-                Stop Camera
-              </button>
-            </div>
-          </div>
-
-          <!-- File Upload Mode -->
-          <div id="fileMode" class="hidden">
-            <h2 class="text-xl font-semibold text-white flex items-center gap-2 mb-4">
-              <i class="fas fa-file-image text-indigo-400"></i>
-              Upload QR Code Image
-            </h2>
-
-            <div id="fileUploadArea" class="file-upload-area rounded-xl p-12 text-center cursor-pointer">
-              <i class="fas fa-cloud-upload-alt text-6xl text-indigo-400 mb-4"></i>
-              <h3 class="text-white font-semibold text-lg mb-2">Drop QR Code Here</h3>
-              <p class="text-gray-500 text-sm mb-4">or click to browse</p>
-              <button type="button" class="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 font-semibold text-white hover:scale-105 transition-all neon-border">
-                <i class="fas fa-folder-open mr-2"></i>
-                Select Image
-              </button>
-            </div>
-            <input type="file" id="fileInput" accept="image/*" />
-
-            <div id="filePreview" class="hidden mt-4 rounded-xl overflow-hidden neon-border">
-              <img id="previewImage" class="w-full" alt="QR Code Preview" />
-            </div>
-          </div>
-
+      <!-- Camera Scanner -->
+      <div id="cameraSection">
+        <div class="mb-6">
+          <div id="qr-reader" class="rounded-2xl overflow-hidden border-2 border-indigo-500/30"></div>
         </div>
-
-        <!-- Tips Card -->
-        <div class="glass-card rounded-xl p-4 border border-indigo-500/30">
-          <div class="flex items-start gap-3">
-            <i class="fas fa-lightbulb text-yellow-400 text-xl mt-1"></i>
-            <div>
-              <h3 class="text-white font-semibold mb-1">Scanner Tips</h3>
-              <ul class="text-gray-500 text-sm space-y-1">
-                <li>• Camera works on HTTPS or localhost</li>
-                <li>• Use File Upload for HTTP testing</li>
-                <li>• Ensure good lighting for camera scan</li>
-              </ul>
-            </div>
-          </div>
+        <div class="text-center">
+          <button id="startScanBtn" onclick="startScanning()" class="px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 font-bold text-white hover:scale-105 transition-all neon-border">
+            <i class="fas fa-play mr-2"></i>
+            Start Camera
+          </button>
+          <button id="stopScanBtn" onclick="stopScanning()" class="hidden px-8 py-4 rounded-xl bg-gradient-to-r from-red-600 to-pink-600 font-bold text-white hover:scale-105 transition-all neon-border">
+            <i class="fas fa-stop mr-2"></i>
+            Stop Camera
+          </button>
         </div>
       </div>
 
-      <!-- Result Section -->
-      <div class="space-y-6">
-        <div class="glass-card rounded-2xl p-6 border border-indigo-500/30">
-          <h2 class="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-            <i class="fas fa-clipboard-check text-purple-400"></i>
-            Scan Result
-          </h2>
-
-          <div id="statusCard" class="mb-6 p-6 rounded-xl glass-card border border-yellow-500/30 text-center">
-            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center pulse-animation">
-              <i class="fas fa-hourglass-half text-3xl text-yellow-400"></i>
-            </div>
-            <div class="text-yellow-400 font-semibold text-lg mb-1">Waiting for Scan</div>
-            <div class="text-gray-500 text-sm">Point camera or upload QR code</div>
-          </div>
-
-          <div class="space-y-4">
-            <div class="flex justify-between items-center text-sm border-b border-indigo-500/20 pb-3">
-              <span class="text-gray-500 flex items-center gap-2">
-                <i class="fas fa-wallet text-indigo-400"></i>
-                Wallet Address
-              </span>
-              <span id="walletAddr" class="font-mono text-gray-600">-</span>
-            </div>
-            <div class="flex justify-between items-center text-sm border-b border-indigo-500/20 pb-3">
-              <span class="text-gray-500 flex items-center gap-2">
-                <i class="fas fa-hashtag text-purple-400"></i>
-                Token ID
-              </span>
-              <span id="tokenId" class="font-mono text-gray-600">-</span>
-            </div>
-            <div class="flex justify-between items-center text-sm border-b border-indigo-500/20 pb-3">
-              <span class="text-gray-500 flex items-center gap-2">
-                <i class="fas fa-calendar text-pink-400"></i>
-                Event
-              </span>
-              <span id="eventName" class="text-gray-600">-</span>
-            </div>
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-gray-500 flex items-center gap-2">
-                <i class="fas fa-check-circle text-emerald-400"></i>
-                Verification
-              </span>
-              <span id="verification" class="text-gray-600">-</span>
-            </div>
-          </div>
-        </div>
-
-        <button id="confirmBtn" disabled class="w-full px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 font-bold text-lg transition-all duration-300 neon-border text-white opacity-50 cursor-not-allowed flex items-center justify-center gap-2">
-          <i class="fas fa-door-open text-xl"></i>
-          Confirm Entry
+      <!-- Manual Input -->
+      <div id="manualSection" class="hidden">
+        <textarea
+          id="qrInput"
+          placeholder='Paste QR JSON here, e.g.:
+{
+  "t": 1,
+  "c": "0x723bd48913CFC218D1Ac458cD7A1202f99EdD7cA",
+  "w": "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb4",
+  "e": "Web3Summit2026",
+  "n": 80002,
+  "ts": 1738483200
+}'
+          class="w-full h-48 p-4 rounded-xl bg-black/50 border border-gray-700 text-sm font-mono text-gray-300 focus:border-indigo-500 focus:outline-none"
+        ></textarea>
+        <button onclick="verifyManual()" class="w-full mt-4 px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 font-bold text-white hover:scale-105 transition-all neon-border">
+          <i class="fas fa-check-circle mr-2"></i>
+          Verify Ticket
         </button>
-
-        <div class="glass-card rounded-xl p-4 border border-indigo-500/30">
-          <div class="flex items-start gap-3">
-            <i class="fas fa-info-circle text-indigo-400 text-xl mt-1"></i>
-            <div>
-              <h3 class="text-white font-semibold mb-1">How to Scan</h3>
-              <p class="text-gray-500 text-sm leading-relaxed">
-                Use camera mode for live scanning or upload mode to scan QR code from image file.
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
 
     </div>
 
-    <!-- Stats Section -->
-    <div class="grid md:grid-cols-4 gap-6 mt-16 glass-card rounded-2xl p-8 border border-indigo-500/30">
-      <div class="stat-card text-center">
-        <div id="scannedCount" class="text-3xl font-bold text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text mb-2">0</div>
-        <div class="text-sm text-gray-500">Scanned Today</div>
+    <!-- Scan Status -->
+    <div id="statusSection" class="hidden glass-card rounded-3xl p-8 mb-8">
+      <div class="text-center">
+        <div id="statusIcon" class="w-24 h-24 mx-auto mb-6 rounded-2xl flex items-center justify-center"></div>
+        <h3 id="statusTitle" class="text-3xl font-bold text-white mb-4"></h3>
+        <p id="statusMessage" class="text-gray-400 mb-6"></p>
+        <div id="statusDetails" class="space-y-3"></div>
       </div>
-      <div class="stat-card text-center">
-        <div id="verifiedCount" class="text-3xl font-bold text-transparent bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text mb-2">0</div>
-        <div class="text-sm text-gray-500">Verified</div>
+    </div>
+
+    <!-- Verification Result -->
+    <div id="resultSection" class="hidden">
+      
+      <!-- Valid Ticket -->
+      <div id="validTicket" class="hidden glass-card rounded-3xl p-10 border-2 border-emerald-500/50 neon-border">
+        <div class="text-center mb-8">
+          <div class="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center animate-pulse">
+            <i class="fas fa-check-circle text-5xl text-white"></i>
+          </div>
+          <h3 class="text-3xl font-bold text-white mb-2">✅ Valid Ticket</h3>
+          <p class="text-emerald-400 font-semibold">Verified on Blockchain</p>
+        </div>
+
+        <div class="space-y-4">
+          <div class="glass-card rounded-xl p-4 border border-emerald-500/30">
+            <div class="text-gray-400 text-xs mb-1">Token ID</div>
+            <div id="validTokenId" class="font-mono text-2xl font-bold text-emerald-400">#0</div>
+          </div>
+          <div class="glass-card rounded-xl p-4 border border-indigo-500/30">
+            <div class="text-gray-400 text-xs mb-1">Event</div>
+            <div id="validEvent" class="font-semibold text-white">Web3 Summit 2026</div>
+          </div>
+          <div class="glass-card rounded-xl p-4 border border-indigo-500/30">
+            <div class="text-gray-400 text-xs mb-1">Owner Address</div>
+            <div id="validOwner" class="font-mono text-sm text-gray-300 break-all">0x0000...0000</div>
+          </div>
+          <div class="glass-card rounded-xl p-4 border border-indigo-500/30">
+            <div class="text-gray-400 text-xs mb-1">Contract Address</div>
+            <div id="validContract" class="font-mono text-xs text-gray-400 break-all">0x0000...0000</div>
+          </div>
+          <div class="glass-card rounded-xl p-4 border border-indigo-500/30">
+            <div class="text-gray-400 text-xs mb-1">Network</div>
+            <div id="validNetwork" class="font-semibold text-white">Polygon Amoy Testnet</div>
+          </div>
+        </div>
+
+        <button onclick="resetScanner()" class="w-full mt-8 px-6 py-4 rounded-xl glass-card border border-indigo-500/50 font-bold text-white hover:neon-border transition-all">
+          <i class="fas fa-redo mr-2"></i>
+          Scan Another Ticket
+        </button>
       </div>
-      <div class="stat-card text-center">
-        <div id="rejectedCount" class="text-3xl font-bold text-transparent bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text mb-2">0</div>
-        <div class="text-sm text-gray-500">Rejected</div>
+
+      <!-- Invalid Ticket -->
+      <div id="invalidTicket" class="hidden glass-card rounded-3xl p-10 border-2 border-red-500/50">
+        <div class="text-center mb-8">
+          <div class="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center">
+            <i class="fas fa-times-circle text-5xl text-white"></i>
+          </div>
+          <h3 class="text-3xl font-bold text-white mb-2">❌ Invalid Ticket</h3>
+          <p id="invalidReason" class="text-red-400 font-semibold">Verification Failed</p>
+        </div>
+
+        <div class="glass-card rounded-xl p-4 border border-red-500/30 mb-8">
+          <div class="text-gray-400 text-xs mb-2">Error Details</div>
+          <div id="invalidDetails" class="text-sm text-gray-300"></div>
+        </div>
+
+        <button onclick="resetScanner()" class="w-full px-6 py-4 rounded-xl glass-card border border-indigo-500/50 font-bold text-white hover:neon-border transition-all">
+          <i class="fas fa-redo mr-2"></i>
+          Try Again
+        </button>
       </div>
-      <div class="stat-card text-center">
-        <div id="pendingCount" class="text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text mb-2">0</div>
-        <div class="text-sm text-gray-500">Pending</div>
-      </div>
+
     </div>
 
   </main>
@@ -255,7 +209,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center gap-4">
         <div class="flex items-center gap-2 text-gray-400 text-sm">
           <i class="fas fa-copyright"></i>
-          <span>2026 NFT Ticket. Built on Ethereum.</span>
+          <span>2026 NFT Ticket. Built on Polygon Amoy.</span>
         </div>
         <div class="flex items-center gap-6">
           <a href="#" class="text-gray-400 hover:text-indigo-400 transition-colors">
@@ -271,9 +225,6 @@
       </div>
     </div>
   </footer>
-
-  <!-- Custom Scripts -->
   <script src="js/scanner.js"></script>
-
 </body>
 </html>

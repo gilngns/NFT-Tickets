@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My NFT Ticket</title>
+  
+  <!-- Libraries -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body class="text-gray-100 min-h-screen grid-bg">
+  
+  <!-- Decorative Elements -->
+  <div class="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+    <div class="absolute top-20 left-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute top-40 right-20 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-20 right-10 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-40 left-20 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="relative z-10 border-b border-indigo-500/20 glass-card">
+    <div class="max-w-6xl mx-auto px-6 py-5 flex justify-between items-center">
+      <a href="index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center neon-border">
+          <i class="fas fa-ticket text-2xl text-white"></i>
+        </div>
+        <span class="font-bold text-2xl tracking-tight text-white glow-text">NFT TICKET</span>
+      </a>
+      
+      <!-- Navigation Links -->
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="px-4 py-2 rounded-lg glass-card hover:neon-border transition-all text-gray-300 hover:text-white">
+          <i class="fas fa-home mr-2"></i>Mint
+        </a>
+        <a href="my-ticket.html" class="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 neon-border text-white font-semibold">
+          <i class="fas fa-id-card mr-2"></i>My Ticket
+        </a>
+        <a href="scanner.html" class="px-4 py-2 rounded-lg glass-card hover:neon-border transition-all text-gray-300 hover:text-white">
+          <i class="fas fa-qrcode mr-2"></i>Scanner
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="relative z-10 max-w-4xl mx-auto px-6 py-16">
+    
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <div class="inline-block mb-6 px-5 py-2.5 rounded-full glass-card border border-indigo-500/50 text-sm neon-border">
+        <span class="text-indigo-300 font-semibold flex items-center gap-2">
+          <i class="fas fa-wallet"></i>
+          Your Digital Ticket
+        </span>
+      </div>
+      <h1 class="text-6xl font-bold mb-4 leading-tight">
+        <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+          My NFT Ticket
+        </span>
+      </h1>
+      <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+        View your event ticket and generate QR code for entry verification
+      </p>
+    </div>
+
+    <!-- Connect Wallet Section (Before Connection) -->
+    <div id="connectSection" class="max-w-lg mx-auto">
+      <div class="glass-card rounded-3xl p-12 text-center pulse-border">
+        <div class="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center animate-pulse">
+          <i class="fas fa-wallet text-5xl text-white"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-white mb-4">Connect Your Wallet</h3>
+        <p class="text-gray-400 mb-8">
+          Connect your wallet to view your NFT ticket and generate QR code
+        </p>
+        <button id="connectBtn" onclick="connect()" class="px-12 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 font-bold text-lg hover:scale-105 transition-all neon-border text-white">
+          <i class="fas fa-plug mr-2"></i>
+          Connect Wallet
+        </button>
+        <p id="connectStatus" class="mt-4 text-sm text-gray-500"></p>
+      </div>
+    </div>
+
+    <!-- Ticket Display Section (After Connection) -->
+    <div id="ticketSection" class="hidden">
+      
+      <!-- No Ticket Message -->
+      <div id="noTicketSection" class="hidden max-w-lg mx-auto">
+        <div class="glass-card rounded-3xl p-12 text-center border border-red-500/30">
+          <div class="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center">
+            <i class="fas fa-times-circle text-5xl text-white"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-4">No Ticket Found</h3>
+          <p class="text-gray-400 mb-8">
+            You haven't minted an NFT ticket yet. Go to the mint page to get your ticket!
+          </p>
+          <a href="index.html" class="inline-block px-12 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 font-bold text-lg hover:scale-105 transition-all neon-border text-white">
+            <i class="fas fa-wand-magic-sparkles mr-2"></i>
+            Mint Ticket Now
+          </a>
+        </div>
+      </div>
+
+      <!-- Ticket Card with QR -->
+      <div id="hasTicketSection" class="hidden">
+        <div class="grid md:grid-cols-2 gap-8">
+          
+          <!-- Left: Ticket Preview -->
+          <div class="glass-card rounded-3xl p-8 pulse-border">
+            <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <i class="fas fa-ticket text-indigo-400"></i>
+              Your Ticket
+            </h3>
+            
+            <div class="relative aspect-[4/3] rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 mb-6 flex items-center justify-center overflow-hidden ticket-glow">
+              <div class="absolute inset-0 bg-black/20"></div>
+              <i class="fas fa-ticket relative text-8xl text-white/90"></i>
+              <div class="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-black/30 backdrop-blur-sm border border-white/20">
+                <span class="text-xs font-bold text-white">ERC-721</span>
+              </div>
+              <div class="absolute bottom-4 left-4 px-3 py-1.5 rounded-lg bg-black/30 backdrop-blur-sm border border-white/20">
+                <span id="ticketTokenId" class="text-xs font-bold text-white font-mono">#0</span>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div class="flex justify-between items-center text-sm border-b border-indigo-500/20 pb-3">
+                <span class="text-gray-500 flex items-center gap-2">
+                  <i class="fas fa-calendar-alt text-indigo-400"></i>
+                  Event
+                </span>
+                <span class="font-semibold text-white">Web3 Summit 2026</span>
+              </div>
+              <div class="flex justify-between items-center text-sm border-b border-indigo-500/20 pb-3">
+                <span class="text-gray-500 flex items-center gap-2">
+                  <i class="fas fa-hashtag text-purple-400"></i>
+                  Token ID
+                </span>
+                <span id="ticketTokenIdDisplay" class="font-mono text-indigo-300 font-semibold">#0</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-500 flex items-center gap-2">
+                  <i class="fas fa-wallet text-pink-400"></i>
+                  Owner
+                </span>
+                <span id="ticketOwner" class="font-mono text-gray-300 text-xs">0x0000...0000</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: QR Code -->
+          <div class="glass-card rounded-3xl p-8 border border-emerald-500/50">
+            <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <i class="fas fa-qrcode text-emerald-400"></i>
+              Entry QR Code
+            </h3>
+
+            <div class="bg-white p-6 rounded-2xl mb-6 flex justify-center">
+              <div id="qrCodeDisplay"></div>
+            </div>
+
+            <div class="space-y-3 mb-6">
+              <div class="glass-card rounded-lg p-3 border border-indigo-500/30">
+                <div class="text-gray-400 text-xs mb-1">Contract Address</div>
+                <div id="contractAddress" class="font-mono text-xs text-gray-300 break-all">0x0000...0000</div>
+              </div>
+              <div class="glass-card rounded-lg p-3 border border-indigo-500/30">
+                <div class="text-gray-400 text-xs mb-1">Blockchain</div>
+                <div class="text-white font-semibold">Polygon Amoy Testnet</div>
+              </div>
+            </div>
+
+            <button id="downloadQrBtn" class="w-full px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 font-bold text-white hover:scale-105 transition-all neon-border">
+              <i class="fas fa-download mr-2"></i>
+              Download QR Code
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="grid md:grid-cols-3 gap-4 mt-8">
+          <a href="scanner.html" class="px-6 py-4 rounded-xl glass-card border border-indigo-500/50 font-semibold text-center text-white hover:neon-border transition-all">
+            <i class="fas fa-qrcode mr-2"></i>
+            Test Scanner
+          </a>
+          <button onclick="viewOnExplorer()" class="px-6 py-4 rounded-xl glass-card border border-purple-500/50 font-semibold text-white hover:neon-border transition-all">
+            <i class="fas fa-external-link-alt mr-2"></i>
+            View on Explorer
+          </button>
+          <button onclick="disconnect()" class="px-6 py-4 rounded-xl glass-card border border-red-500/50 font-semibold text-white hover:neon-border transition-all">
+            <i class="fas fa-power-off mr-2"></i>
+            Disconnect
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="relative z-10 border-t border-indigo-500/20 glass-card mt-20">
+    <div class="max-w-6xl mx-auto px-6 py-8">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-2 text-gray-400 text-sm">
+          <i class="fas fa-copyright"></i>
+          <span>2026 NFT Ticket. Built on Polygon Amoy.</span>
+        </div>
+        <div class="flex items-center gap-6">
+          <a href="#" class="text-gray-400 hover:text-indigo-400 transition-colors">
+            <i class="fab fa-twitter text-xl"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-indigo-400 transition-colors">
+            <i class="fab fa-discord text-xl"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-indigo-400 transition-colors">
+            <i class="fab fa-github text-xl"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+</footer>
+<script src="js/my-ticket.js"></script>
+</body>
+</html>

@@ -1,4 +1,3 @@
-// Smooth scroll for navigation
 document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
   anchor.addEventListener("click", function (e) {
     e.preventDefault();
@@ -12,7 +11,6 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
   });
 });
 
-// Animate elements on scroll
 const observerOptions = {
   threshold: 0.1,
   rootMargin: "0px 0px -100px 0px",
@@ -31,19 +29,14 @@ document.querySelectorAll(".feature-card, .stat-card").forEach((el) => {
   observer.observe(el);
 });
 
-// Wallet connection (placeholder)
 function connectWallet() {
-  // TODO: Implement actual wallet connection
   console.log("Connect wallet clicked");
   alert("Wallet connection will be implemented with Web3.js");
 }
 
-// Add event listeners
 document.addEventListener("DOMContentLoaded", () => {
-  // Add any initialization code here
   console.log("NFT Ticket Platform Loaded");
 
-  // Example: Add click handlers for buttons
   const connectButtons = document.querySelectorAll(".connect-wallet-btn");
   connectButtons.forEach((btn) => {
     btn.addEventListener("click", connectWallet);
