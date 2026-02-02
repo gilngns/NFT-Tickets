@@ -135,44 +135,20 @@ function initializeContract() {
 
 async function connectWallet() {
   try {
-    // ✅ CHECK IF MOBILE & NOT IN METAMASK APP
-    if (isMobile() && !window.ethereum && !isMetaMaskAppBrowser()) {
-      showStatus("Redirecting to MetaMask app...", "loading");
-      
-      // Wait 1 second then redirect
-      setTimeout(() => {
-        openInMetaMaskApp();
-      }, 1000);
-      
+    // ✅ MOBILE + BUKAN METAMASK BROWSER → FORCE OPEN APP
+    if (isMobile() && !isMetaMaskAppBrowser()) {
+      showStatus("Opening MetaMask app...", "loading");
+      openInMetaMaskApp();
       return;
     }
 
+    // ❌ NO METAMASK
     if (!window.ethereum) {
-      showStatus("MetaMask not detected! Please install MetaMask.", "error");
-      
-      // Open MetaMask download page based on device
-      setTimeout(() => {
-        if (isMobile()) {
-          // Detect Android or iOS
-          const isAndroid = /Android/i.test(navigator.userAgent);
-          const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-          
-          if (isAndroid) {
-            window.open("https://play.google.com/store/apps/details?id=io.metamask", "_blank");
-          } else if (isIOS) {
-            window.open("https://apps.apple.com/app/metamask/id1438144202", "_blank");
-          } else {
-            window.open("https://metamask.io/download/", "_blank");
-          }
-        } else {
-          window.open("https://metamask.io/download/", "_blank");
-        }
-      }, 2000);
-      
+      showStatus("MetaMask not detected!", "error");
       return;
     }
 
-    showStatus("Connecting to wallet...", "loading");
+    showStatus("Connecting wallet...", "loading");
 
     const accounts = await window.ethereum.request({
       method: "eth_requestAccounts",
@@ -192,32 +168,35 @@ async function connectWallet() {
     updateNetworkDisplay();
     updateMintButtonState();
 
-    showStatus("Wallet connected successfully! 🎉", "success");
+    showStatus("Wallet connected successfully!", "success");
 
-    console.log("✅ Connected:", userAccount);
-    console.log("📡 Chain ID:", chainId);
-
-    // Check network
+    // 🔁 NETWORK CHECK TETAP
     if (Number(chainId) !== TARGET_CHAIN_ID) {
-      showStatus(`⚠️ Please switch to ${TARGET_NETWORK_NAME}`, "error");
       setTimeout(() => {
         promptNetworkSwitch();
-      }, 2000);
+      }, 1000);
     }
 
-    // ✅ Generate QR after successful mint
     await generateQRAfterConnection();
 
   } catch (error) {
-    console.error("❌ Connection error:", error);
+    console.error("❌ Connect error:", error);
 
     if (error.code === 4001) {
       showStatus("Connection rejected by user", "error");
     } else {
-      showStatus("Failed to connect: " + error.message, "error");
+      showStatus("Failed to connect wallet", "error");
     }
   }
 }
+
+
+function openInMetaMaskApp() {
+  const dappUrl = window.location.href.replace(/^https?:\/\//, "");
+  const deepLink = `metamask://dapp/${dappUrl}`;
+  window.location.href = deepLink;
+}
+
 
 function disconnectWallet() {
   userAccount = null;
