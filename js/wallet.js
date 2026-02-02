@@ -3,7 +3,7 @@ let userAccount = null;
 let chainId = null;
 let ticketContract = null;
 
-const CONTRACT_ADDRESS = "0xc7a379ee1d7272c9d7eaE711fC7be195c8319337";
+const CONTRACT_ADDRESS = "0x723bd48913CFC218D1Ac458cD7A1202f99EdD7cA";
 
 const CONTRACT_ABI = [
   {
@@ -16,7 +16,7 @@ const CONTRACT_ABI = [
   {
     inputs: [{ internalType: "address", name: "", type: "address" }],
     name: "hasMinted",
-    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    outputs: [{ internalType: "bool", name: "", "type": "bool" }],
     stateMutability: "view",
     type: "function",
   },
@@ -72,6 +72,23 @@ function setupEventListeners() {
   }
 }
 
+// ✅ DETECT MOBILE & METAMASK APP
+function isMobile() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function isMetaMaskAppBrowser() {
+  return /MetaMask/i.test(navigator.userAgent);
+}
+
+function openInMetaMaskApp() {
+  const currentUrl = window.location.href;
+  const metamaskAppDeepLink = `https://metamask.app.link/dapp/${currentUrl.replace(/^https?:\/\//, '')}`;
+  
+  console.log("📱 Redirecting to MetaMask app:", metamaskAppDeepLink);
+  window.location.href = metamaskAppDeepLink;
+}
+
 async function initializeWallet() {
   const isWalletConnected = localStorage.getItem("isWalletConnected");
 
@@ -118,9 +135,40 @@ function initializeContract() {
 
 async function connectWallet() {
   try {
+    // ✅ CHECK IF MOBILE & NOT IN METAMASK APP
+    if (isMobile() && !window.ethereum && !isMetaMaskAppBrowser()) {
+      showStatus("Redirecting to MetaMask app...", "loading");
+      
+      // Wait 1 second then redirect
+      setTimeout(() => {
+        openInMetaMaskApp();
+      }, 1000);
+      
+      return;
+    }
+
     if (!window.ethereum) {
       showStatus("MetaMask not detected! Please install MetaMask.", "error");
-      window.open("https://metamask.io/download/", "_blank");
+      
+      // Open MetaMask download page based on device
+      setTimeout(() => {
+        if (isMobile()) {
+          // Detect Android or iOS
+          const isAndroid = /Android/i.test(navigator.userAgent);
+          const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+          
+          if (isAndroid) {
+            window.open("https://play.google.com/store/apps/details?id=io.metamask", "_blank");
+          } else if (isIOS) {
+            window.open("https://apps.apple.com/app/metamask/id1438144202", "_blank");
+          } else {
+            window.open("https://metamask.io/download/", "_blank");
+          }
+        } else {
+          window.open("https://metamask.io/download/", "_blank");
+        }
+      }, 2000);
+      
       return;
     }
 
@@ -156,6 +204,10 @@ async function connectWallet() {
         promptNetworkSwitch();
       }, 2000);
     }
+
+    // ✅ Generate QR after successful mint
+    await generateQRAfterConnection();
+
   } catch (error) {
     console.error("❌ Connection error:", error);
 
@@ -210,6 +262,12 @@ async function checkMintStatus() {
 
       const balance = await ticketContract.methods.balanceOf(userAccount).call();
       console.log("🎫 Tickets owned:", balance);
+
+      // ✅ Show QR if already minted
+      const nextTokenId = await ticketContract.methods.nextTokenId().call();
+      const tokenId = Number(nextTokenId) - 1;
+      await generateQR(tokenId);
+
     } else {
       if (mintBtn) {
         mintBtn.disabled = false;
@@ -358,6 +416,9 @@ async function mintTicket() {
       tokenIdElement.textContent = `#${mintedTokenId}`;
     }
 
+    // ✅ Generate QR Code
+    await generateQR(mintedTokenId);
+
     setTimeout(() => {
       const explorerUrl = `https://amoy.polygonscan.com/tx/${tx.transactionHash}`;
       showStatus(`<a href="${explorerUrl}" target="_blank" class="underline hover:text-emerald-300">View on PolygonScan</a>`, "success");
@@ -377,6 +438,112 @@ async function mintTicket() {
       showStatus("Minting failed: " + (error.message || "Unknown error"), "error");
     }
   }
+}
+
+// ✅ GENERATE QR CODE FUNCTION
+async function generateQR(tokenId) {
+  const qrSection = document.getElementById("qrSection");
+  const qrContainer = document.getElementById("qrCodeContainer");
+  const qrTokenId = document.getElementById("qrTokenId");
+  const qrWallet = document.getElementById("qrWallet");
+
+  if (!qrSection || !qrContainer) {
+    console.error("❌ QR elements not found in DOM");
+    return;
+  }
+
+  // ✅ SHORTENED QR PAYLOAD
+  const qrData = {
+    t: tokenId,
+    c: CONTRACT_ADDRESS,
+    w: userAccount,
+    e: "Web3Summit2026",
+    n: TARGET_CHAIN_ID,
+    ts: Math.floor(Date.now()/1000)
+  };
+
+  const payload = JSON.stringify(qrData);
+  console.log("🔳 Generating QR Code with payload:", payload);
+  console.log("📏 Payload size:", payload.length, "bytes");
+
+  qrContainer.innerHTML = "";
+
+  try {
+    if (typeof QRCode === 'undefined') {
+      console.error("❌ QRCode library not loaded!");
+      showStatus("QR Code library not loaded. Please refresh the page.", "error");
+      return;
+    }
+
+    new QRCode(qrContainer, {
+      text: payload,
+      width: 256,
+      height: 256,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.L
+    });
+
+    if (qrTokenId) qrTokenId.textContent = `#${tokenId}`;
+    if (qrWallet) qrWallet.textContent = userAccount;
+
+    qrSection.classList.remove("hidden");
+    
+    setTimeout(() => {
+      qrSection.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 300);
+
+    console.log("✅ QR Code generated successfully");
+    setupQRDownload(tokenId);
+
+  } catch (error) {
+    console.error("❌ QR generation failed:", error);
+    showStatus("Failed to generate QR code: " + error.message, "error");
+  }
+}
+
+// ✅ Generate QR after connection if already minted
+async function generateQRAfterConnection() {
+  if (!ticketContract || !userAccount) return;
+
+  try {
+    const hasMinted = await ticketContract.methods.hasMinted(userAccount).call();
+    if (hasMinted) {
+      const nextTokenId = await ticketContract.methods.nextTokenId().call();
+      const tokenId = Number(nextTokenId) - 1;
+      await generateQR(tokenId);
+    }
+  } catch (error) {
+    console.error("❌ Error checking mint status for QR:", error);
+  }
+}
+
+// ✅ Setup QR Download
+function setupQRDownload(tokenId) {
+  const downloadBtn = document.getElementById("downloadQrBtn");
+  if (!downloadBtn) return;
+
+  downloadBtn.onclick = () => {
+    const qrCanvas = document.querySelector("#qrCodeContainer canvas");
+    if (!qrCanvas) {
+      alert("QR Code not found!");
+      return;
+    }
+
+    qrCanvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `nft-ticket-${tokenId}-qr.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      console.log("✅ QR Code downloaded");
+      showStatus("QR Code downloaded successfully!", "success");
+    });
+  };
 }
 
 async function promptNetworkSwitch() {
@@ -475,14 +642,14 @@ window.walletConnection = {
   connectWallet,
   disconnectWallet,
   isConnected: () => !!userAccount,
-
   getAccount: () => userAccount,
   getChainId: () => chainId,
   getWeb3: () => web3,
   getContract: () => ticketContract,
   getBalance,
-
   checkMintStatus,
   switchToAmoyNetwork,
   mintTicket,
+  isMobile,
+  isMetaMaskAppBrowser
 };
