@@ -7,6 +7,20 @@
         "outputs": [{"internalType": "address", "name": "", "type": "address"}],
         "stateMutability": "view",
         "type": "function"
+      },
+      {
+        "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+        "name": "isUsed",
+        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+        "name": "markUsed",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
       }
     ];
 
@@ -103,57 +117,84 @@
 
     // Verify ticket on blockchain
     async function verifyTicket(qrData) {
-      try {
-        // Parse QR data
-        const data = JSON.parse(qrData);
-        
-        // Support both old and new format
-        const tokenId = data.t || data.tokenId;
-        const contractAddr = data.c || data.contract;
-        const walletAddr = data.w || data.wallet;
-        const event = data.e || data.event;
-        const chainId = data.n || data.chainId;
+    try {
+      const data = JSON.parse(qrData);
 
-        console.log("📋 Parsed data:", { tokenId, contractAddr, walletAddr, event, chainId });
+      const tokenId = data.t || data.tokenId;
+      const contractAddr = data.c || data.contract;
+      const walletAddr = data.w || data.wallet;
+      const event = data.e || data.event;
+      const chainId = data.n || data.chainId;
 
-        // Validate contract address
-        if (contractAddr.toLowerCase() !== CONTRACT_ADDRESS.toLowerCase()) {
-          showInvalidTicket("Wrong contract address", `Expected: ${CONTRACT_ADDRESS}\nGot: ${contractAddr}`);
-          return;
-        }
+      // =========================
+      // BASIC VALIDATION
+      // =========================
+      if (contractAddr.toLowerCase() !== CONTRACT_ADDRESS.toLowerCase()) {
+        showInvalidTicket("Wrong contract", "QR is not from this event");
+        return;
+      }
 
-        // Validate chain ID
-        if (chainId !== TARGET_CHAIN_ID) {
-          showInvalidTicket("Wrong network", `Expected: Polygon Amoy (${TARGET_CHAIN_ID})\nGot: ${chainId}`);
-          return;
-        }
+      if (chainId !== TARGET_CHAIN_ID) {
+        showInvalidTicket("Wrong network", "Invalid blockchain network");
+        return;
+      }
 
-        // Show loading
-        showStatus("Verifying on blockchain...", "⏳", "text-blue-400");
+      showStatus("Checking ticket status on blockchain...", "⏳", "text-blue-400");
 
-        // Verify ownership on blockchain
-        const owner = await contract.methods.ownerOf(tokenId).call();
-        console.log("🔍 Blockchain owner:", owner);
-        console.log("🎫 QR wallet:", walletAddr);
+      // =========================
+      // 1️⃣ CEK SUDAH DIPAKAI?
+      // =========================
+      const alreadyUsed = await contract.methods.isUsed(tokenId).call();
 
-        if (owner.toLowerCase() === walletAddr.toLowerCase()) {
-          showValidTicket(tokenId, event, walletAddr, contractAddr);
-        } else {
-          showInvalidTicket("Ownership mismatch", `Blockchain owner: ${owner}\nQR wallet: ${walletAddr}`);
-        }
+      if (alreadyUsed) {
+        showInvalidTicket(
+          "Ticket already used",
+          "This ticket has already been scanned before"
+        );
+        return;
+      }
 
-      } catch (error) {
-        console.error("❌ Verification error:", error);
-        
-        if (error.message.includes("ERC721")) {
-          showInvalidTicket("Token does not exist", "This token ID has not been minted");
-        } else if (error.message.includes("JSON")) {
-          showInvalidTicket("Invalid QR format", "Failed to parse QR data");
-        } else {
-          showInvalidTicket("Verification failed", error.message);
-        }
+      // =========================
+      // 2️⃣ CEK OWNERSHIP
+      // =========================
+      const owner = await contract.methods.ownerOf(tokenId).call();
+
+      if (owner.toLowerCase() !== walletAddr.toLowerCase()) {
+        showInvalidTicket(
+          "Ownership mismatch",
+          `Owner on-chain: ${owner}\nQR wallet: ${walletAddr}`
+        );
+        return;
+      }
+
+      // =========================
+      // 3️⃣ TANDAI TIKET DIGUNAKAN (ON-CHAIN)
+      // =========================
+      showStatus("Marking ticket as used...", "⛓️", "text-blue-400");
+
+      const accounts = await web3.eth.getAccounts();
+
+      await contract.methods.markUsed(tokenId).send({
+        from: accounts[0],
+        gas: 200000
+      });
+
+      // =========================
+      // 4️⃣ VALID
+      // =========================
+      showValidTicket(tokenId, event, walletAddr, contractAddr);
+
+    } catch (error) {
+      console.error("❌ Verification error:", error);
+
+      if (error.message?.includes("Ticket already used")) {
+        showInvalidTicket("Ticket already used", "This ticket cannot be reused");
+      } else {
+        showInvalidTicket("Verification failed", error.message);
       }
     }
+  }
+
 
     // Show status message
     function showStatus(message, icon, colorClass) {
