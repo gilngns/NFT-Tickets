@@ -1,14 +1,31 @@
+/* =========================================================
+   WALLET.JS — NFT TICKET (ADMIN GASLESS MINT)
+   FINAL VERSION — CLEAN & SAFE
+   ========================================================= */
+
 let web3;
 let userAccount = null;
+let adminAccount = null;
 let chainId = null;
 let ticketContract = null;
 
-const CONTRACT_ADDRESS = "0x723bd48913CFC218D1Ac458cD7A1202f99EdD7cA";
+/* =========================
+   CONFIG
+========================= */
+const CONTRACT_ADDRESS = "0x562d1f41dC3A3237F38A0897a258fF1344db8cDF";
+const ADMIN_ADDRESS    = "0x6b095ACd5Ce3da41a5E2394Bf4642C3ecbfB877c";
 
+const TARGET_CHAIN_ID  = 80002;
+const TARGET_CHAIN_HEX = "0x13882";
+const TARGET_NETWORK_NAME = "Polygon Amoy Testnet";
+
+/* =========================
+   ABI
+========================= */
 const CONTRACT_ABI = [
   {
-    inputs: [],
-    name: "mintTicket",
+    inputs: [{ internalType: "address", name: "to", type: "address" }],
+    name: "mintFor",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -16,7 +33,7 @@ const CONTRACT_ABI = [
   {
     inputs: [{ internalType: "address", name: "", type: "address" }],
     name: "hasMinted",
-    outputs: [{ internalType: "bool", name: "", "type": "bool" }],
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
     stateMutability: "view",
     type: "function",
   },
@@ -41,26 +58,40 @@ const CONTRACT_ABI = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "address", name: "to", type: "address" },
+      { indexed: true, internalType: "uint256", name: "tokenId", type: "uint256" }
+    ],
+    name: "TicketMinted",
+    type: "event"
+  }
 ];
 
+/* =========================
+   NETWORK MAP
+========================= */
 const NETWORKS = {
   1: "Ethereum Mainnet",
   5: "Goerli Testnet",
   11155111: "Sepolia Testnet",
   137: "Polygon Mainnet",
-  80001: "Mumbai Testnet (Deprecated)",
+  80001: "Mumbai (Deprecated)",
   80002: "Polygon Amoy Testnet",
 };
 
-const TARGET_CHAIN_ID = 80002; 
-const TARGET_CHAIN_HEX = "0x13882"; 
-const TARGET_NETWORK_NAME = "Polygon Amoy Testnet";
-
+/* =========================
+   INIT
+========================= */
 document.addEventListener("DOMContentLoaded", () => {
   initializeWallet();
   setupEventListeners();
 });
 
+/* =========================
+   EVENT LISTENERS
+========================= */
 function setupEventListeners() {
   document.getElementById("connectBtn")?.addEventListener("click", connectWallet);
   document.getElementById("disconnectBtn")?.addEventListener("click", disconnectWallet);
@@ -68,143 +99,96 @@ function setupEventListeners() {
 
   if (window.ethereum) {
     window.ethereum.on("accountsChanged", handleAccountsChanged);
-    window.ethereum.on("chainChanged", handleChainChanged);
+    window.ethereum.on("chainChanged", () => window.location.reload());
   }
 }
 
-// ✅ DETECT MOBILE & METAMASK APP
-function isMobile() {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
-
-function isMetaMaskAppBrowser() {
-  return /MetaMask/i.test(navigator.userAgent);
-}
-
-function openInMetaMaskApp() {
-  const currentUrl = window.location.href;
-  const metamaskAppDeepLink = `https://metamask.app.link/dapp/${currentUrl.replace(/^https?:\/\//, '')}`;
-  
-  console.log("📱 Redirecting to MetaMask app:", metamaskAppDeepLink);
-  window.location.href = metamaskAppDeepLink;
-}
-
+/* =========================
+   WALLET INIT
+========================= */
 async function initializeWallet() {
-  const isWalletConnected = localStorage.getItem("isWalletConnected");
+  if (!window.ethereum) return;
 
-  if (isWalletConnected === "true" && window.ethereum) {
-    try {
-      const accounts = await window.ethereum.request({
-        method: "eth_accounts",
-      });
+  const accounts = await window.ethereum.request({ method: "eth_accounts" });
+  if (accounts.length === 0) return;
 
-      if (accounts.length > 0) {
-        userAccount = accounts[0];
-        web3 = new Web3(window.ethereum);
-        chainId = await web3.eth.getChainId();
+  const account = accounts[0];
 
-        initializeContract();
-        await checkMintStatus();
-
-        updateWalletUI(true);
-        updateNetworkDisplay();
-        updateMintButtonState();
-
-        console.log("✅ Auto-reconnected:", userAccount);
-        console.log("📡 Chain ID:", chainId);
-      } else {
-        clearWalletData();
-      }
-    } catch (error) {
-      console.error("❌ Auto-connect error:", error);
-      clearWalletData();
-    }
-  }
-
-  updateMintButtonState();
-}
-
-function initializeContract() {
-  if (web3 && CONTRACT_ADDRESS && CONTRACT_ADDRESS !== "YOUR_CONTRACT_ADDRESS_ON_AMOY") {
-    ticketContract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
-    console.log("📄 Contract initialized:", CONTRACT_ADDRESS);
+  if (account.toLowerCase() === ADMIN_ADDRESS.toLowerCase()) {
+    adminAccount = account;
   } else {
-    console.warn("⚠️ Contract address not set. Please update CONTRACT_ADDRESS.");
+    userAccount = account;
   }
-}
 
-async function connectWallet() {
-  try {
-    // ✅ MOBILE + BUKAN METAMASK BROWSER → FORCE OPEN APP
-    if (isMobile() && !isMetaMaskAppBrowser()) {
-      showStatus("Opening MetaMask app...", "loading");
-      openInMetaMaskApp();
-      return;
-    }
+  web3 = new Web3(window.ethereum);
+  chainId = await web3.eth.getChainId();
 
-    // ❌ NO METAMASK
-    if (!window.ethereum) {
-      showStatus("MetaMask not detected!", "error");
-      return;
-    }
+  initializeContract();
+  updateWalletUI(true);
+  updateNetworkDisplay();
+  updateMintButtonState();
 
-    showStatus("Connecting wallet...", "loading");
-
-    const accounts = await window.ethereum.request({
-      method: "eth_requestAccounts",
-    });
-
-    userAccount = accounts[0];
-    web3 = new Web3(window.ethereum);
-    chainId = await web3.eth.getChainId();
-
-    initializeContract();
+  if (userAccount) {
     await checkMintStatus();
-
-    localStorage.setItem("isWalletConnected", "true");
-    localStorage.setItem("connectedAccount", userAccount);
-
-    updateWalletUI(true);
-    updateNetworkDisplay();
-    updateMintButtonState();
-
-    showStatus("Wallet connected successfully!", "success");
-
-    // 🔁 NETWORK CHECK TETAP
-    if (Number(chainId) !== TARGET_CHAIN_ID) {
-      setTimeout(() => {
-        promptNetworkSwitch();
-      }, 1000);
-    }
-
-    await generateQRAfterConnection();
-
-  } catch (error) {
-    console.error("❌ Connect error:", error);
-
-    if (error.code === 4001) {
-      showStatus("Connection rejected by user", "error");
-    } else {
-      showStatus("Failed to connect wallet", "error");
-    }
   }
 }
 
-
-function openInMetaMaskApp() {
-  const dappUrl = window.location.href.replace(/^https?:\/\//, "");
-  const deepLink = `metamask://dapp/${dappUrl}`;
-  window.location.href = deepLink;
+/* =========================
+   CONTRACT INIT
+========================= */
+function initializeContract() {
+  ticketContract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
 }
 
+/* =========================
+   CONNECT WALLET
+========================= */
+async function connectWallet() {
+  if (!window.ethereum) {
+    showStatus("MetaMask not detected", "error");
+    return;
+  }
 
+  const accounts = await window.ethereum.request({
+    method: "eth_requestAccounts",
+  });
+
+  const account = accounts[0];
+
+  if (account.toLowerCase() === ADMIN_ADDRESS.toLowerCase()) {
+    adminAccount = account;
+    userAccount = null;
+    showStatus("Admin wallet connected", "success");
+  } else {
+    userAccount = account;
+    showStatus("Wallet connected", "success");
+  }
+
+  web3 = new Web3(window.ethereum);
+  chainId = await web3.eth.getChainId();
+
+  initializeContract();
+  updateWalletUI(true);
+  updateNetworkDisplay();
+  updateMintButtonState();
+
+  if (userAccount) {
+    await checkMintStatus();
+  }
+
+  if (chainId !== TARGET_CHAIN_ID) {
+    setTimeout(promptNetworkSwitch, 800);
+  }
+}
+
+/* =========================
+   DISCONNECT
+========================= */
 function disconnectWallet() {
   userAccount = null;
-  chainId = null;
+  adminAccount = null;
   web3 = null;
   ticketContract = null;
-
-  clearWalletData();
 
   updateWalletUI(false);
   updateNetworkDisplay();
@@ -213,322 +197,134 @@ function disconnectWallet() {
   showStatus("Wallet disconnected", "info");
 }
 
-function clearWalletData() {
-  localStorage.removeItem("isWalletConnected");
-  localStorage.removeItem("connectedAccount");
-}
-
-async function checkMintStatus() {
-  if (!ticketContract || !userAccount) return;
-
-  try {
-    const hasMinted = await ticketContract.methods.hasMinted(userAccount).call();
-    const mintBtn = document.getElementById("mintBtn");
-
-    if (hasMinted) {
-      if (mintBtn) {
-        mintBtn.disabled = true;
-        mintBtn.innerHTML = `
-          <span class="flex items-center justify-center gap-3">
-            <i class="fas fa-check-circle text-2xl"></i>
-            <span>Already Minted</span>
-          </span>
-        `;
-        mintBtn.classList.add("opacity-50", "cursor-not-allowed");
-      }
-
-      showStatus("You have already minted a ticket!", "info");
-
-      const balance = await ticketContract.methods.balanceOf(userAccount).call();
-      console.log("🎫 Tickets owned:", balance);
-
-      // ✅ Show QR if already minted
-      const nextTokenId = await ticketContract.methods.nextTokenId().call();
-      const tokenId = Number(nextTokenId) - 1;
-      await generateQR(tokenId);
-
-    } else {
-      if (mintBtn) {
-        mintBtn.disabled = false;
-        mintBtn.innerHTML = `
-          <span class="flex items-center justify-center gap-3">
-            <i class="fas fa-wand-magic-sparkles text-2xl group-hover:rotate-12 transition-transform"></i>
-            <span>Mint Ticket NFT</span>
-          </span>
-        `;
-        mintBtn.classList.remove("opacity-50", "cursor-not-allowed");
-      }
-    }
-  } catch (error) {
-    console.error("❌ Check mint status error:", error);
-  }
-}
-
-function updateWalletUI(isConnected) {
-  const connectBtn = document.getElementById("connectBtn");
-  const walletInfo = document.getElementById("walletInfo");
-  const walletAddress = document.getElementById("walletAddress");
-
-  if (isConnected && userAccount) {
-    connectBtn?.classList.add("hidden");
-    walletInfo?.classList.remove("hidden");
-    walletInfo?.classList.add("flex");
-
-    const formattedAddress = formatAddress(userAccount);
-    if (walletAddress) {
-      walletAddress.textContent = formattedAddress;
-    }
-  } else {
-    connectBtn?.classList.remove("hidden");
-    walletInfo?.classList.add("hidden");
-    walletInfo?.classList.remove("flex");
-  }
-}
-
-function updateNetworkDisplay() {
-  const networkName = document.getElementById("networkName");
-  if (!networkName) return;
-
-  if (chainId) {
-    const networkText = NETWORKS[chainId] || `Chain ID: ${chainId}`;
-    networkName.textContent = networkText;
-
-    if (Number(chainId) !== TARGET_CHAIN_ID) {
-      networkName.classList.add("text-yellow-400");
-      networkName.classList.remove("text-white");
-    } else {
-      networkName.classList.remove("text-yellow-400");
-      networkName.classList.add("text-white");
-    }
-  } else {
-    networkName.textContent = "Not Connected";
-    networkName.classList.remove("text-yellow-400");
-  }
-}
-
-function updateMintButtonState() {
-  const mintBtn = document.getElementById("mintBtn");
-  if (!mintBtn) return;
-  if (mintBtn.innerHTML.includes("Already Minted")) return;
-
-  if (userAccount) {
-    mintBtn.disabled = false;
-    mintBtn.classList.remove("opacity-50", "cursor-not-allowed");
-  } else {
-    mintBtn.disabled = true;
-    mintBtn.classList.add("opacity-50", "cursor-not-allowed");
-  }
-}
-
+/* =========================
+   ACCOUNT CHANGE
+========================= */
 function handleAccountsChanged(accounts) {
   if (accounts.length === 0) {
     disconnectWallet();
-  } else if (accounts[0] !== userAccount) {
-    userAccount = accounts[0];
-    localStorage.setItem("connectedAccount", userAccount);
-
-    checkMintStatus();
-    updateWalletUI(true);
-
-    showStatus("Switched to: " + formatAddress(userAccount), "info");
-  }
-}
-
-function handleChainChanged(_chainId) {
-  window.location.reload();
-}
-
-async function mintTicket() {
-  if (!userAccount) {
-    showStatus("Please connect your wallet first!", "error");
     return;
   }
 
-  if (!ticketContract) {
-    showStatus("Contract not initialized! Update CONTRACT_ADDRESS.", "error");
+  const account = accounts[0];
+
+  if (account.toLowerCase() === ADMIN_ADDRESS.toLowerCase()) {
+    adminAccount = account;
+    userAccount = null;
+  } else {
+    userAccount = account;
+    adminAccount = null;
+  }
+
+  updateWalletUI(true);
+  updateMintButtonState();
+  checkMintStatus();
+}
+
+/* =========================
+   MINT STATUS
+========================= */
+async function checkMintStatus() {
+  if (!ticketContract || !userAccount) return;
+
+  const hasMinted = await ticketContract.methods.hasMinted(userAccount).call();
+  const mintBtn = document.getElementById("mintBtn");
+
+  if (hasMinted) {
+    mintBtn.disabled = true;
+    mintBtn.innerHTML = "Already Minted";
+    mintBtn.classList.add("opacity-50");
+  } else {
+    mintBtn.disabled = false;
+    mintBtn.innerHTML = "Mint Ticket NFT";
+    mintBtn.classList.remove("opacity-50");
+  }
+}
+
+/* =========================
+   MINT (ADMIN GAS)
+========================= */
+async function mintTicket() {
+  if (!userAccount) {
+    showStatus("Connect wallet first", "error");
+    return;
+  }
+
+  if (!adminAccount) {
+    showStatus("Admin wallet not connected", "error");
+    return;
+  }
+
+  if (chainId !== TARGET_CHAIN_ID) {
+    await promptNetworkSwitch();
     return;
   }
 
   try {
-    showStatus("Checking network...", "loading");
+    showStatus("Minting ticket...", "loading");
 
-    if (Number(chainId) !== TARGET_CHAIN_ID) {
-      showStatus(`Please switch to ${TARGET_NETWORK_NAME}`, "error");
-      await promptNetworkSwitch();
-      return;
-    }
-
-    showStatus("Checking eligibility...", "loading");
-
-    const hasMinted = await ticketContract.methods.hasMinted(userAccount).call();
-    if (hasMinted) {
-      showStatus("You have already minted a ticket!", "error");
-      await checkMintStatus();
-      return;
-    }
-
-    const maxSupply = await ticketContract.methods.maxSupply().call();
-    const nextTokenId = await ticketContract.methods.nextTokenId().call();
-
-    if (Number(nextTokenId) >= Number(maxSupply)) {
-      showStatus("All tickets have been minted!", "error");
-      return;
-    }
-
-    showStatus("Please confirm transaction in MetaMask...", "loading");
-
-    const tx = await ticketContract.methods.mintTicket().send({
-      from: userAccount,
+    const tx = await ticketContract.methods.mintFor(userAccount).send({
+      from: adminAccount,
       gas: 300000,
     });
 
-    console.log("✅ Transaction:", tx.transactionHash);
+    const tokenId = tx.events.TicketMinted.returnValues.tokenId;
 
-    const mintedTokenId = Number(nextTokenId);
+    showStatus("Mint success!", "success");
+    document.getElementById("tokenIdDisplay").textContent = `#${tokenId}`;
 
-    showStatus("Ticket minted successfully! 🎉", "success");
+    await generateQR(tokenId);
 
-    await checkMintStatus();
-
-    const tokenIdElement = document.getElementById("tokenIdDisplay");
-    if (tokenIdElement) {
-      tokenIdElement.textContent = `#${mintedTokenId}`;
-    }
-
-    // ✅ Generate QR Code
-    await generateQR(mintedTokenId);
-
-    setTimeout(() => {
-      const explorerUrl = `https://amoy.polygonscan.com/tx/${tx.transactionHash}`;
-      showStatus(`<a href="${explorerUrl}" target="_blank" class="underline hover:text-emerald-300">View on PolygonScan</a>`, "success");
-    }, 3000);
-
-  } catch (error) {
-    console.error("❌ Minting error:", error);
-
-    if (error.code === 4001) {
-      showStatus("Transaction rejected by user", "error");
-    } else if (error.message?.includes("Already minted")) {
-      showStatus("You have already minted a ticket!", "error");
-      await checkMintStatus();
-    } else if (error.message?.includes("Max supply")) {
-      showStatus("All tickets have been minted!", "error");
-    } else {
-      showStatus("Minting failed: " + (error.message || "Unknown error"), "error");
-    }
+  } catch (err) {
+    console.error(err);
+    showStatus("Mint failed", "error");
   }
 }
 
-// ✅ GENERATE QR CODE FUNCTION
+/* =========================
+   QR GENERATOR
+========================= */
 async function generateQR(tokenId) {
-  const qrSection = document.getElementById("qrSection");
   const qrContainer = document.getElementById("qrCodeContainer");
-  const qrTokenId = document.getElementById("qrTokenId");
-  const qrWallet = document.getElementById("qrWallet");
+  const qrSection = document.getElementById("qrSection");
 
-  if (!qrSection || !qrContainer) {
-    console.error("❌ QR elements not found in DOM");
-    return;
-  }
+  if (!qrContainer || !qrSection) return;
 
-  // ✅ SHORTENED QR PAYLOAD
-  const qrData = {
+  const payload = JSON.stringify({
     t: tokenId,
     c: CONTRACT_ADDRESS,
     w: userAccount,
-    e: "Web3Summit2026",
     n: TARGET_CHAIN_ID,
-    ts: Math.floor(Date.now()/1000)
-  };
-
-  const payload = JSON.stringify(qrData);
-  console.log("🔳 Generating QR Code with payload:", payload);
-  console.log("📏 Payload size:", payload.length, "bytes");
+    ts: Math.floor(Date.now() / 1000),
+  });
 
   qrContainer.innerHTML = "";
 
-  try {
-    if (typeof QRCode === 'undefined') {
-      console.error("❌ QRCode library not loaded!");
-      showStatus("QR Code library not loaded. Please refresh the page.", "error");
-      return;
-    }
+  new QRCode(qrContainer, {
+    text: payload,
+    width: 256,
+    height: 256,
+    correctLevel: QRCode.CorrectLevel.L,
+  });
 
-    new QRCode(qrContainer, {
-      text: payload,
-      width: 256,
-      height: 256,
-      colorDark: "#000000",
-      colorLight: "#ffffff",
-      correctLevel: QRCode.CorrectLevel.L
-    });
+  document.getElementById("qrTokenId").textContent = `#${tokenId}`;
+  document.getElementById("qrWallet").textContent = userAccount;
 
-    if (qrTokenId) qrTokenId.textContent = `#${tokenId}`;
-    if (qrWallet) qrWallet.textContent = userAccount;
-
-    qrSection.classList.remove("hidden");
-    
-    setTimeout(() => {
-      qrSection.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 300);
-
-    console.log("✅ QR Code generated successfully");
-    setupQRDownload(tokenId);
-
-  } catch (error) {
-    console.error("❌ QR generation failed:", error);
-    showStatus("Failed to generate QR code: " + error.message, "error");
-  }
+  qrSection.classList.remove("hidden");
 }
 
-// ✅ Generate QR after connection if already minted
-async function generateQRAfterConnection() {
-  if (!ticketContract || !userAccount) return;
+/* =========================
+   NETWORK
+========================= */
+function updateNetworkDisplay() {
+  const el = document.getElementById("networkName");
+  if (!el) return;
 
-  try {
-    const hasMinted = await ticketContract.methods.hasMinted(userAccount).call();
-    if (hasMinted) {
-      const nextTokenId = await ticketContract.methods.nextTokenId().call();
-      const tokenId = Number(nextTokenId) - 1;
-      await generateQR(tokenId);
-    }
-  } catch (error) {
-    console.error("❌ Error checking mint status for QR:", error);
-  }
-}
-
-// ✅ Setup QR Download
-function setupQRDownload(tokenId) {
-  const downloadBtn = document.getElementById("downloadQrBtn");
-  if (!downloadBtn) return;
-
-  downloadBtn.onclick = () => {
-    const qrCanvas = document.querySelector("#qrCodeContainer canvas");
-    if (!qrCanvas) {
-      alert("QR Code not found!");
-      return;
-    }
-
-    qrCanvas.toBlob((blob) => {
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `nft-ticket-${tokenId}-qr.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      console.log("✅ QR Code downloaded");
-      showStatus("QR Code downloaded successfully!", "success");
-    });
-  };
+  el.textContent = NETWORKS[chainId] || "Unknown Network";
 }
 
 async function promptNetworkSwitch() {
-  if (confirm(`Switch to ${TARGET_NETWORK_NAME}?`)) {
-    await switchToAmoyNetwork();
-  }
+  await switchToAmoyNetwork();
 }
 
 async function switchToAmoyNetwork() {
@@ -537,98 +333,53 @@ async function switchToAmoyNetwork() {
       method: "wallet_switchEthereumChain",
       params: [{ chainId: TARGET_CHAIN_HEX }],
     });
-    showStatus("Switched to Amoy Testnet!", "success");
-  } catch (switchError) {
-    if (switchError.code === 4902) {
-      try {
-        await window.ethereum.request({
-          method: "wallet_addEthereumChain",
-          params: [
-            {
-              chainId: TARGET_CHAIN_HEX,
-              chainName: TARGET_NETWORK_NAME,
-              nativeCurrency: {
-                name: "MATIC",
-                symbol: "MATIC",
-                decimals: 18,
-              },
-              rpcUrls: ["https://rpc-amoy.polygon.technology/"],
-              blockExplorerUrls: ["https://amoy.polygonscan.com/"],
-            },
-          ],
-        });
-        showStatus("Amoy Testnet added successfully!", "success");
-      } catch (addError) {
-        console.error("❌ Failed to add network:", addError);
-        showStatus("Failed to add network", "error");
-      }
-    } else {
-      console.error("❌ Failed to switch network:", switchError);
-      showStatus("Failed to switch network", "error");
-    }
+  } catch (e) {
+    console.error(e);
   }
 }
 
-function showStatus(message, type = "info") {
-  const statusBox = document.getElementById("statusBox");
-  if (!statusBox) return;
+/* =========================
+   UI HELPERS
+========================= */
+function updateWalletUI(isConnected) {
+  const connectBtn = document.getElementById("connectBtn");
+  const walletInfo = document.getElementById("walletInfo");
+  const walletAddress = document.getElementById("walletAddress");
 
-  const icons = {
-    loading: '<i class="fas fa-spinner fa-spin"></i>',
-    success: '<i class="fas fa-check-circle"></i>',
-    error: '<i class="fas fa-exclamation-circle"></i>',
-    info: '<i class="fas fa-info-circle"></i>',
-  };
-
-  const colors = {
-    loading: "text-blue-400",
-    success: "text-emerald-400",
-    error: "text-red-400",
-    info: "text-gray-400",
-  };
-
-  statusBox.innerHTML = `
-    <div class="flex items-center justify-center gap-2 ${colors[type]}">
-      ${icons[type]}
-      <span>${message}</span>
-    </div>
-  `;
-
-  if (type === "success" || type === "error") {
-    setTimeout(() => {
-      statusBox.innerHTML = "";
-    }, 7000);
+  if (isConnected && userAccount) {
+    connectBtn?.classList.add("hidden");
+    walletInfo?.classList.remove("hidden");
+    walletAddress.textContent = formatAddress(userAccount);
+  } else {
+    connectBtn?.classList.remove("hidden");
+    walletInfo?.classList.add("hidden");
   }
 }
 
-function formatAddress(address) {
-  if (!address) return "";
-  return address.substring(0, 6) + "..." + address.substring(38);
+function updateMintButtonState() {
+  const mintBtn = document.getElementById("mintBtn");
+  if (!mintBtn) return;
+  mintBtn.disabled = !userAccount;
 }
 
-async function getBalance(address) {
-  if (!web3 || !address) return "0";
-  try {
-    const balance = await web3.eth.getBalance(address);
-    return web3.utils.fromWei(balance, "ether");
-  } catch (error) {
-    console.error("❌ Balance error:", error);
-    return "0";
-  }
+function showStatus(message, type) {
+  const box = document.getElementById("statusBox");
+  if (!box) return;
+  box.textContent = message;
 }
 
+/* =========================
+   UTIL
+========================= */
+function formatAddress(addr) {
+  return addr.slice(0, 6) + "..." + addr.slice(-4);
+}
+
+/* =========================
+   EXPORT
+========================= */
 window.walletConnection = {
   connectWallet,
   disconnectWallet,
-  isConnected: () => !!userAccount,
-  getAccount: () => userAccount,
-  getChainId: () => chainId,
-  getWeb3: () => web3,
-  getContract: () => ticketContract,
-  getBalance,
-  checkMintStatus,
-  switchToAmoyNetwork,
   mintTicket,
-  isMobile,
-  isMetaMaskAppBrowser
 };
